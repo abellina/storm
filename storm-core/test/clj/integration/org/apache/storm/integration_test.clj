@@ -19,7 +19,8 @@
   (:import [org.apache.storm.topology TopologyBuilder])
   (:import [org.apache.storm.generated InvalidTopologyException SubmitOptions TopologyInitialStatus RebalanceOptions])
   (:import [org.apache.storm.testing TestWordCounter TestWordSpout TestGlobalCount
-            TestAggregatesCounter TestConfBolt AckFailMapTracker AckTracker TestPlannerSpout])
+            TestAggregatesCounter TestConfBolt AckFailMapTracker AckTracker TestPlannerSpout
+            FeederSpout])
   (:import [org.apache.storm.utils Time])
   (:import [org.apache.storm.tuple Fields])
   (:import [org.apache.storm.cluster StormClusterStateImpl])
@@ -120,7 +121,7 @@
 
 (deftest test-timeout
   (with-simulated-time-local-cluster [cluster :daemon-conf {TOPOLOGY-ENABLE-MESSAGE-TIMEOUTS true}]
-    (let [feeder (feeder-spout ["field1"])
+    (let [feeder (FeederSpout. (Fields. ["field1"]))
           tracker (AckFailMapTracker.)
           _ (.setAckFailDelegate feeder tracker)
           topology (Thrift/buildTopology
@@ -159,7 +160,7 @@
 
 (deftest test-reset-timeout
   (with-simulated-time-local-cluster [cluster :daemon-conf {TOPOLOGY-ENABLE-MESSAGE-TIMEOUTS true}]
-    (let [feeder (feeder-spout ["field1"])
+    (let [feeder (FeederSpout. (Fields. ["field1"]))
           tracker (AckFailMapTracker.)
           _ (.setAckFailDelegate feeder tracker)
           topology (Thrift/buildTopology
@@ -259,7 +260,7 @@
 
 (defn ack-tracking-feeder [fields]
   (let [tracker (AckTracker.)]
-    [(doto (feeder-spout fields)
+    [(doto (FeederSpout. (Fields. fields))
        (.setAckFailDelegate tracker))
      (fn [val]
        (is (= (.getNumAcks tracker) val))
@@ -419,7 +420,7 @@
 
 (deftest test-submit-inactive-topology
   (with-simulated-time-local-cluster [cluster :daemon-conf {TOPOLOGY-ENABLE-MESSAGE-TIMEOUTS true}]
-    (let [feeder (feeder-spout ["field1"])
+    (let [feeder (FeederSpout. (Fields. ["field1"]))
           tracker (AckFailMapTracker.)
           _ (.setAckFailDelegate feeder tracker)
           topology (Thrift/buildTopology

@@ -17,12 +17,13 @@
   (:use [clojure test])
   (:require [org.apache.storm [testing :as t]])
   (:import [org.apache.storm.trident.testing Split CountAsAggregator StringLength TrueFilter
-            MemoryMapState$Factory])
+            MemoryMapState$Factory FeederBatchSpout])
   (:import [org.apache.storm.trident.state StateSpec])
   (:import [org.apache.storm.trident.operation.impl CombinerAggStateUpdater]
            [org.apache.storm.trident.operation BaseFunction]
            [org.json.simple.parser JSONParser]
            [org.apache.storm Config])
+  (:import [org.apache.storm.tuple Fields])
   (:use [org.apache.storm.trident testing]
         [org.apache.storm log util config]))
 
@@ -45,7 +46,7 @@
     (with-drpc [drpc]
       (letlocals
         (bind topo (TridentTopology.))
-        (bind feeder (feeder-spout ["sentence"]))
+        (bind feeder (FeederBatchSpout. (Fields. ["sentence"])))
         (bind word-counts
           (-> topo
               (.newStream "tester" feeder)
@@ -72,7 +73,7 @@
     (with-drpc [drpc]
       (letlocals
         (bind topo (TridentTopology.))
-        (bind feeder (feeder-spout ["sentence"]))
+        (bind feeder (FeederBatchSpout. (Fields. ["sentence"])))
         (bind word-counts
           (-> topo
               (.newStream "tester" feeder)
@@ -291,7 +292,7 @@
     (with-drpc [drpc]
       (letlocals
         (bind topo (TridentTopology.))
-        (bind feeder (feeder-spout ["sentence"]))
+        (bind feeder (FeederBatchSpout. (Fields. ["sentence"])))
         (bind add-bang (proxy [BaseFunction] []
                          (execute [tuple collector]
                            (. collector emit (str (. tuple getString 0) "!")))))

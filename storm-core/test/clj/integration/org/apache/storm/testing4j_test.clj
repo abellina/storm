@@ -21,11 +21,11 @@
   (:require [org.apache.storm.internal.thrift :as thrift])
   (:import [org.apache.storm Testing Config ILocalCluster]
            [org.apache.storm.generated GlobalStreamId])
-  (:import [org.apache.storm.tuple Values Tuple])
+  (:import [org.apache.storm.tuple Values Tuple Fields])
   (:import [org.apache.storm.utils Time Utils])
   (:import [org.apache.storm.testing MkClusterParam TestJob MockedSources TestWordSpout
             TestWordCounter TestGlobalCount TestAggregatesCounter CompleteTopologyParam
-            AckFailMapTracker MkTupleParam])
+            AckFailMapTracker MkTupleParam FeederTuple])
   (:import [org.apache.storm.utils Utils])
   (:import [org.apache.storm Thrift]))
 
@@ -161,7 +161,7 @@
      mk-cluster-param
      (reify TestJob
        (^void run [this ^ILocalCluster cluster]
-         (let [feeder (feeder-spout ["field1"])
+         (let [feeder (FeederSpout. (Fields. ["field1"]))
                tracker (AckFailMapTracker.)
                _ (.setAckFailDelegate feeder tracker)
                topology (Thrift/buildTopology
@@ -195,7 +195,7 @@
       mk-cluster-param
       (reify TestJob
         (^void run [this ^ILocalCluster cluster]
-          (let [feeder (feeder-spout ["field1"])
+          (let [feeder (FeederSpout. (Fields. ["field1"]))
                 tracker (AckFailMapTracker.)
                 _ (.setAckFailDelegate feeder tracker)
                 topology (Thrift/buildTopology

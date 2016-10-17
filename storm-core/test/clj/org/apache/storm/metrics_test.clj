@@ -18,12 +18,14 @@
   (:import [org.apache.storm.topology TopologyBuilder])
   (:import [org.apache.storm.generated InvalidTopologyException SubmitOptions TopologyInitialStatus])
   (:import [org.apache.storm.testing TestWordCounter TestWordSpout TestGlobalCount
-            TestAggregatesCounter TestConfBolt AckFailMapTracker PythonShellMetricsBolt PythonShellMetricsSpout])
+            TestAggregatesCounter TestConfBolt AckFailMapTracker PythonShellMetricsBolt PythonShellMetricsSpout
+            FeederSpout])
   (:import [org.apache.storm.task ShellBolt])
   (:import [org.apache.storm.spout ShellSpout])
   (:import [org.apache.storm.metric.api CountMetric IMetricsConsumer$DataPoint IMetricsConsumer$TaskInfo])
   (:import [org.apache.storm.metric.api.rpc CountShellMetric])
   (:import [org.apache.storm.utils Utils])
+  (:import [org.apache.storm.tuple Fields])
   
   (:use [org.apache.storm testing config])
   (:use [org.apache.storm.internal clojure])
@@ -104,7 +106,7 @@
                            "storm.zookeeper.connection.timeout" 30000
                            "storm.zookeeper.session.timeout" 60000
                            }]
-    (let [feeder (feeder-spout ["field1"])
+    (let [feeder (FeederSpout. (Fields. ["field1"]))
           topology (Thrift/buildTopology
                     {"1" (Thrift/prepareSpoutDetails feeder)}
                     {"2" (Thrift/prepareBoltDetails
@@ -135,7 +137,7 @@
                            "storm.zookeeper.connection.timeout" 30000
                            "storm.zookeeper.session.timeout" 60000
                            }]
-    (let [feeder (feeder-spout ["field1"])
+    (let [feeder (FeederSpoout. (Fields. ["field1"]))
           topology (Thrift/buildTopology
                      {"1" (Thrift/prepareSpoutDetails feeder)}
                      {"2" (Thrift/prepareBoltDetails
@@ -171,7 +173,7 @@
                        "storm.zookeeper.connection.timeout" 30000
                        "storm.zookeeper.session.timeout" 60000
                        }]
-    (let [feeder (feeder-spout ["field1"])
+    (let [feeder (FeederSpout. (Fields. ["field1"]))
           topology (Thrift/buildTopology
                      {"1" (Thrift/prepareSpoutDetails feeder)}
                      {"2" (mk-shell-bolt-with-metrics-spec
@@ -225,7 +227,7 @@
                            [{"class" "org.apache.storm.metric.FakeMetricConsumer"}]
                            TOPOLOGY-STATS-SAMPLE-RATE 1.0
                            TOPOLOGY-BUILTIN-METRICS-BUCKET-SIZE-SECS 60}]
-    (let [feeder (feeder-spout ["field1"])
+    (let [feeder (FeederSpout. (Fields. ["field1"]))
           topology (Thrift/buildTopology
                     {"myspout" (Thrift/prepareSpoutDetails feeder)}
                     {"mybolt" (Thrift/prepareBoltDetails
@@ -265,7 +267,7 @@
                            [{"class" "org.apache.storm.metric.FakeMetricConsumer"}]
                            TOPOLOGY-STATS-SAMPLE-RATE 1.0
                            TOPOLOGY-BUILTIN-METRICS-BUCKET-SIZE-SECS 5}]
-    (let [feeder (feeder-spout ["field1"])
+    (let [feeder (FeederSpout. (Fields. ["field1"]))
           tracker (AckFailMapTracker.)
           _ (.setAckFailDelegate feeder tracker)
           topology (Thrift/buildTopology
@@ -320,7 +322,7 @@
                            TOPOLOGY-STATS-SAMPLE-RATE 1.0
                            TOPOLOGY-BUILTIN-METRICS-BUCKET-SIZE-SECS 5
                            TOPOLOGY-ENABLE-MESSAGE-TIMEOUTS true}]
-    (let [feeder (feeder-spout ["field1"])
+    (let [feeder (FeederSpout. (Fields. ["field1"]))
           tracker (AckFailMapTracker.)
           _ (.setAckFailDelegate feeder tracker)
           topology (Thrift/buildTopology
@@ -359,7 +361,7 @@
     [cluster :daemon-conf {TOPOLOGY-METRICS-CONSUMER-REGISTER
                            [{"class" "org.apache.storm.metric.FakeMetricConsumer"}]
                            TOPOLOGY-BUILTIN-METRICS-BUCKET-SIZE-SECS 60}]
-    (let [feeder (feeder-spout ["field1"])
+    (let [feeder (FeederSpout. (Fields. ["field1"]))
           topology (Thrift/buildTopology
                     {"1" (Thrift/prepareSpoutDetails feeder)}
                     {})]      

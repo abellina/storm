@@ -58,14 +58,6 @@
   (:use [org.apache.storm util config log local-state-converter converter])
   (:use [org.apache.storm.internal thrift]))
 
-(defn feeder-spout
-  [fields]
-  (FeederSpout. (Fields. fields)))
-
-(defn local-temp-path
-  []
-  (str (System/getProperty "java.io.tmpdir") (if-not (Utils/isOnWindows) "/") (Utils/uuid)))
-
 (defn delete-all
   [paths]
   (dorun
@@ -76,30 +68,24 @@
           (catch Exception e
             (log-message (.getMessage e))))))))
 
+;; TODO-JAVA: replace this with the TemporaryFolder rule
 (defmacro with-local-tmp
   [[& tmp-syms] & body]
-  (let [tmp-paths (mapcat (fn [t] [t `(local-temp-path)]) tmp-syms)]
+  (let [tmp-paths (mapcat (fn [t] [t `(TestUtils/getLocalTempPath)]) tmp-syms)]
     `(let [~@tmp-paths]
        (try
          ~@body
          (finally
            (delete-all ~(vec tmp-syms)))))))
 
-(defn start-simulating-time!
-  []
-  (Time/startSimulating))
-
-(defn stop-simulating-time!
-  []
-  (Time/stopSimulating))
-
+;; TODO-JAVA: replace with beforeEach and afterEach
 (defmacro with-simulated-time
   [& body]
   `(try
-    (start-simulating-time!)
+    (Time/startSimulating)
     ~@body
     (finally
-      (stop-simulating-time!))))
+      (Time/stopSimulating))))
 
 (defn advance-time-ms! [ms]
   (Time/advanceTime ms))
@@ -132,7 +118,7 @@
 
 (defnk add-supervisor
   [cluster-map :ports 2 :conf {} :id nil]
-  (let [tmp-dir (local-temp-path)
+  (let [tmp-dir (TestUtils/getLocalTempPath)
         port-ids (if (sequential? ports)
                    ports
                    (doall (repeatedly ports (:port-counter cluster-map))))
@@ -174,7 +160,7 @@
 ;; can customize the supervisors (except for ports) by passing in map for :supervisors parameter
 ;; if need to customize amt of ports more, can use add-supervisor calls afterwards
 (defnk mk-local-storm-cluster [:supervisors 2 :ports-per-supervisor 3 :daemon-conf {} :inimbus nil :supervisor-slot-port-min 1024 :nimbus-daemon false]
-  (let [zk-tmp (local-temp-path)
+  (let [zk-tmp (TestUtils/getLocalTempPath)
         [zk-port zk-handle] (if-not (contains? daemon-conf STORM-ZOOKEEPER-SERVERS)
                               (Zookeeper/mkInprocessZookeeper zk-tmp nil))
         nimbus-tmp (local-temp-path)

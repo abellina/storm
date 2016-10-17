@@ -33,9 +33,6 @@
 (defn exec-drpc-tuples [^LocalDRPC drpc function-name tuples]
   (exec-drpc drpc function-name (JSONValue/toJSONString tuples)))
 
-(defn feeder-spout [fields]
-  (FeederBatchSpout. fields))
-
 (defn feeder-committer-spout [fields]
   (FeederCommitterBatchSpout. fields))
 

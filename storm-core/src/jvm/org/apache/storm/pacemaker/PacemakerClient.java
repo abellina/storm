@@ -17,13 +17,8 @@
  */
 package org.apache.storm.pacemaker;
 
-import org.apache.storm.Config;
-import org.apache.storm.generated.HBMessage;
-import org.apache.storm.messaging.netty.ISaslClient;
-import org.apache.storm.messaging.netty.NettyRenameThreadFactory;
-import org.apache.storm.security.auth.AuthUtils;
-import org.apache.storm.utils.StormBoundedExponentialBackoffRetry;
 import java.net.InetSocketAddress;
+import java.nio.channels.Channel;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -32,14 +27,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Logger;
+
 import javax.security.auth.login.Configuration;
+
+import org.apache.storm.Config;
+import org.apache.storm.generated.HBMessage;
+import org.apache.storm.messaging.netty.ISaslClient;
+import org.apache.storm.messaging.netty.NettyRenameThreadFactory;
 import org.apache.storm.pacemaker.codec.ThriftNettyClientCodec;
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.storm.security.auth.AuthUtils;
+import org.apache.storm.utils.StormBoundedExponentialBackoffRetry;
 
 public class PacemakerClient implements ISaslClient {
 
