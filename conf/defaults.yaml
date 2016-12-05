@@ -288,6 +288,32 @@ pacemaker.kerberos.users: []
 storm.daemon.metrics.reporter.plugins:
      - "org.apache.storm.daemon.metrics.reporters.JmxPreparableReporter"
 
+storm.metrics.reporters:
+    "graphite":
+        class: "org.apache.storm.metrics2.reporters.GraphitePreparableReporter"
+        daemons: 
+            - "supervisor"
+            - "nimbus"
+            - "worker"
+        schedule.period: 60
+        schedule.period.units: "SECONDS"
+        target.host: "localhost"
+        target.port: 2003
+
+    "default":
+        class: "org.apache.storm.metrics2.reporters.StormPreparableReporter"
+        daemons: 
+            - "worker"
+        schedule.period: 10
+        schedule.period.units: "SECONDS"
+        rate.units: "SECONDS"
+        duration.units: "SECONDS"
+
+        #TODO: not funtional, but you get the idea
+        filters:
+            "org.apache.storm.metrics2.filters.RegexFilter":
+                expression: ".*my_component.*emitted.*"
+
 # configuration of cluster metrics consumer
 storm.cluster.metrics.consumer.publish.interval.secs: 60
 

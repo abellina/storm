@@ -455,6 +455,27 @@ struct SupervisorInfo {
     9: optional map<string, double> resources_map;
 }
 
+//TODO: not LS?
+struct LSWorkerStats {
+   // TODO: does this need to be a range?
+   1: optional i64 time_stamp;
+   2: optional map<string, double> metrics;
+}
+
+struct WorkerStats {
+    1: optional i64 port;
+    2: optional string storm_id;
+    3: optional map<i64, LSWorkerStats> metrics;
+   // TODO: is this necessary?
+    4: optional list<ExecutorInfo> executor_infos;
+}
+
+struct SupervisorWorkerStats {
+    1: optional string supervisor_host;
+    2: optional string supervisor_id;
+    3: optional map<string, WorkerStats> worker_stats;
+}
+
 struct NodeInfo {
     1: required string node;
     2: required set<i64> port;
@@ -537,6 +558,7 @@ struct LSWorkerHeartbeat {
    3: required list<ExecutorInfo> executors
    4: required i32 port;
 }
+
 
 struct LSTopoHistory {
    1: required string topology_id;

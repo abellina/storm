@@ -26,6 +26,7 @@ import org.apache.storm.StormTimer;
 import org.apache.storm.cluster.IStateStorage;
 import org.apache.storm.cluster.IStormClusterState;
 import org.apache.storm.cluster.VersionedData;
+import org.apache.storm.cluster.DaemonType;
 import org.apache.storm.daemon.StormCommon;
 import org.apache.storm.daemon.supervisor.AdvancedFSOps;
 import org.apache.storm.generated.Assignment;
@@ -47,6 +48,8 @@ import org.apache.storm.messaging.IConnection;
 import org.apache.storm.messaging.IContext;
 import org.apache.storm.messaging.TaskMessage;
 import org.apache.storm.messaging.TransportFactory;
+import org.apache.storm.metrics2.reporters.MetricReporterConfig;
+import org.apache.storm.metrics2.StormMetricRegistry;
 import org.apache.storm.serialization.KryoTupleSerializer;
 import org.apache.storm.task.WorkerTopologyContext;
 import org.apache.storm.tuple.AddressedTuple;
@@ -215,6 +218,8 @@ public class WorkerState {
     // whether the throttle is activated for spouts
     final AtomicBoolean throttleOn = new AtomicBoolean(false);
 
+    final StormMetricRegistry metricRegistry;
+
     public LoadMapping getLoadMapping() {
         return loadMapping;
     }
@@ -257,6 +262,7 @@ public class WorkerState {
     private final AtomicLong nextUpdate = new AtomicLong(0);
     private final boolean trySerializeLocal;
     private final TransferDrainer drainer;
+    private final MetricReporterConfig reporterConfig;
 
     private static final long LOAD_REFRESH_INTERVAL_MS = 5000L;
 
@@ -326,6 +332,18 @@ public class WorkerState {
             LOG.warn("WILL TRY TO SERIALIZE ALL TUPLES (Turn off {} for production", Config.TOPOLOGY_TESTING_ALWAYS_TRY_SERIALIZE);
         }
         this.drainer = new TransferDrainer();
+        //TODO-AB: use or deprecate the scope
+        this.metricRegistry = new StormMetricRegistry(new ArrayList<String>());
+        reporterConfig = new MetricReporterConfig(this.metricRegistry, DaemonType.WORKER, workerId);
+        reporterConfig.configure(conf);
+    }
+
+    public void stopMetricReporters() {
+        reporterConfig.stop();
+    }
+
+    public StormMetricRegistry getMetricRegistry() {
+        return this.metricRegistry;
     }
 
     public void refreshConnections() {

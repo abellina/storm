@@ -23,6 +23,15 @@ import org.apache.storm.generated.ExecutorStats;
 import org.apache.storm.metric.api.IMetric;
 import org.apache.storm.metric.internal.MultiCountStatAndMetric;
 import org.apache.storm.metric.internal.MultiLatencyStatAndMetric;
+import org.apache.storm.metrics2.StormMetricRegistry;
+
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Reservoir;
+import com.codahale.metrics.SlidingTimeWindowReservoir;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("unchecked")
 public abstract class CommonStats {

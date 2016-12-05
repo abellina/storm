@@ -54,6 +54,7 @@ import org.apache.storm.generated.StormTopology;
 import org.apache.storm.grouping.LoadAwareCustomStreamGrouping;
 import org.apache.storm.metric.api.IMetric;
 import org.apache.storm.metric.api.IMetricsConsumer;
+import org.apache.storm.metrics2.StormMetricRegistry;
 import org.apache.storm.stats.BoltExecutorStats;
 import org.apache.storm.stats.CommonStats;
 import org.apache.storm.stats.SpoutExecutorStats;

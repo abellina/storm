@@ -54,6 +54,8 @@ public class Config extends HashMap<String, Object> {
     //DO NOT CHANGE UNLESS WE ADD IN STATE NOT STORED IN THE PARENT CLASS
     private static final long serialVersionUID = -1550278723792864455L;
 
+    public static final String STORM_METRICS_REPORTERS = "storm.metrics.reporters";
+
     /**
      * This is part of a temporary workaround to a ZK bug, it is the 'scheme:acl' for
      * the user Nimbus and Supervisors use to authenticate with ZK.
@@ -146,39 +148,71 @@ public class Config extends HashMap<String, Object> {
      * These plugins must implement {@link org.apache.storm.daemon.metrics.reporters.PreparableReporter} interface.
      */
     @isStringList
-    public static final String STORM_DAEMON_METRICS_REPORTER_PLUGINS = "storm.daemon.metrics.reporter.plugins";
+    public static final String STORM_METRICS_REPORTER_PLUGINS = "storm.daemon.metrics.reporter.plugins";
 
     /**
      * A specify Locale for daemon metrics reporter plugin.
      * Use the specified IETF BCP 47 language tag string for a Locale.
      */
     @isString
-    public static final String STORM_DAEMON_METRICS_REPORTER_PLUGIN_LOCALE = "storm.daemon.metrics.reporter.plugin.locale";
-
-    /**
-     * A specify domain for daemon metrics reporter plugin to limit reporting to specific domain.
-     */
-    @isString
-    public static final String STORM_DAEMON_METRICS_REPORTER_PLUGIN_DOMAIN = "storm.daemon.metrics.reporter.plugin.domain";
+    public static final String STORM_METRICS_REPORTER_LOCALE = "locale";
 
     /**
      * A specify rate-unit in TimeUnit to specify reporting frequency for daemon metrics reporter plugin.
      */
     @isString
-    public static final String STORM_DAEMON_METRICS_REPORTER_PLUGIN_RATE_UNIT = "storm.daemon.metrics.reporter.plugin.rate.unit";
+    public static final String STORM_METRICS_REPORTER_RATE_UNIT = "rate.units";
 
     /**
      * A specify duration-unit in TimeUnit to specify reporting window for daemon metrics reporter plugin.
      */
     @isString
-    public static final String STORM_DAEMON_METRICS_REPORTER_PLUGIN_DURATION_UNIT = "storm.daemon.metrics.reporter.plugin.duration.unit";
+    public static final String STORM_METRICS_REPORTER_DURATION_UNIT = "duration.units";
 
+    @isString
+    public static final String STORM_METRICS_REPORTER_TARGET_HOST = "target.host";
+
+    @isInteger
+    public static final String STORM_METRICS_REPORTER_TARGET_PORT = "target.port";
+
+    @isString
+    public static final String STORM_METRICS_REPORTER_TARGET_TRANSPORT = "target.transport";
+
+    @isString
+    public static final String STORM_METRICS_REPORTER_TARGET_UDP_GROUP = "target.udp.group";
+
+    @isString
+    public static final String STORM_METRICS_REPORTER_TARGET_UDP_ADDRESSING_MODE = "target.udp.addressing.mode";
+
+    @isInteger
+    public static final String STORM_METRICS_REPORTER_TARGET_TTL = "target.ttl";
+
+    @isString
+    public static final String STORM_METRICS_REPORTER_PREFIXED_WITH = "prefixed.with";
+
+    @isInteger
+    public static final String STORM_METRICS_REPORTER_SCHEDULE_PERIOD = "schedule.period";
+
+    @isString
+    public static final String STORM_METRICS_REPORTER_SCHEDULE_PERIOD_UNIT = "schedule.period.units";
+
+    @isInteger
+    public static final String STORM_METRICS_REPORTER_GANGLIA_DMAX = "ganglia.dmax";
+
+    @isInteger
+    public static final String STORM_METRICS_REPORTER_GANGLIA_TMAX = "ganglia.tmax";
+
+    /**
+     * A specify domain for daemon metrics reporter plugin to limit reporting to specific domain.
+     */
+    @isString
+    public static final String STORM_METRICS_REPORTER_JMX_DOMAIN = "jmx.domain";
 
     /**
      * A specify csv reporter directory for CvsPreparableReporter daemon metrics reporter.
      */
     @isString
-    public static final String STORM_DAEMON_METRICS_REPORTER_CSV_LOG_DIR = "storm.daemon.metrics.reporter.csv.log.dir";
+    public static final String STORM_METRICS_REPORTER_CSV_LOG_DIR = "csv.log.dir";
 
     /**
      * A list of hosts of ZooKeeper servers used to manage the cluster.

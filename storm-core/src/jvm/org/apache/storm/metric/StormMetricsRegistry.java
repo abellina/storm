@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.storm.daemon.metrics.MetricsUtils;
-import org.apache.storm.daemon.metrics.reporters.PreparableReporter;
+import org.apache.storm.metrics2.reporters.PreparableReporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,9 +65,9 @@ public class StormMetricsRegistry {
     }
 
     private static void startMetricsReporter(PreparableReporter reporter, Map stormConf) {
-        reporter.prepare(StormMetricsRegistry.DEFAULT_REGISTRY, stormConf);
-        reporter.start();
-        LOG.info("Started statistics report plugin...");
+       //reporter.prepare(StormMetricsRegistry.DEFAULT_REGISTRY, stormConf);
+       //reporter.start();
+        LOG.error("DID NOT start statistics report plugin...");
     }
 
     private static <T extends Metric> T register(String name, T metric) {

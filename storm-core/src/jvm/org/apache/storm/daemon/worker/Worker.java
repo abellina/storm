@@ -415,6 +415,7 @@ public class Worker implements Shutdownable, DaemonCommon {
             workerState.refreshLoadTimer.close();
             workerState.resetLogLevelsTimer.close();
             workerState.closeResources();
+            workerState.stopMetricReporters();
 
             LOG.info("Trigger any worker shutdown hooks");
             workerState.runWorkerShutdownHooks();
