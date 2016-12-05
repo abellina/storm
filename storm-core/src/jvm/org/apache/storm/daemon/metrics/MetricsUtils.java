@@ -18,8 +18,7 @@
 package org.apache.storm.daemon.metrics;
 
 import org.apache.storm.Config;
-import org.apache.storm.daemon.metrics.reporters.JmxPreparableReporter;
-import org.apache.storm.daemon.metrics.reporters.PreparableReporter;
+import org.apache.storm.metrics2.reporters.PreparableReporter;
 import org.apache.storm.utils.ConfigUtils;
 import org.apache.storm.utils.Utils;
 import org.slf4j.Logger;
@@ -36,18 +35,27 @@ public class MetricsUtils {
     private final static Logger LOG = LoggerFactory.getLogger(MetricsUtils.class);
 
     public static List<PreparableReporter> getPreparableReporters(Map stormConf) {
-        List<String> clazzes = (List<String>) stormConf.get(Config.STORM_DAEMON_METRICS_REPORTER_PLUGINS);
+        //TODO: AB remove this
+//        List<String> clazzes = (List<String>) stormConf.get(Config.STORM_DAEMON_METRICS_REPORTER_PLUGINS);
         List<PreparableReporter> reporterList = new ArrayList<>();
 
-        if (clazzes != null) {
-            for (String clazz : clazzes) {
-                reporterList.add(getPreparableReporter(clazz));
-            }
-        }
-        if (reporterList.isEmpty()) {
-            reporterList.add(new JmxPreparableReporter());
-        }
-        return reporterList;
+ //      if (clazzes != null) {
+ //          for (String clazz : clazzes) {
+ //              reporterList.add(getPreparableReporter(clazz));
+ //          }
+ //      }
+//       if (reporterList.isEmpty()) {
+//           reporterList.add(new JmxPreparableReporter());
+//       }
+       return reporterList;
+    }
+
+    public static Integer getGangliaDMax(Map reporterConf) {
+        return Utils.getInt(reporterConf.get(Config.STORM_METRICS_REPORTER_GANGLIA_DMAX), null);
+    }
+
+    public static Integer getGangliaTMax(Map reporterConf) {
+        return Utils.getInt(reporterConf.get(Config.STORM_METRICS_REPORTER_GANGLIA_TMAX), null);
     }
 
     private static PreparableReporter getPreparableReporter(String clazz) {
@@ -59,32 +67,73 @@ public class MetricsUtils {
         return reporter;
     }
 
-    public static Locale getMetricsReporterLocale(Map stormConf) {
-        String languageTag = Utils.getString(stormConf.get(Config.STORM_DAEMON_METRICS_REPORTER_PLUGIN_LOCALE), null);
+    public static Locale getMetricsReporterLocale(Map reporterConf) {
+        String languageTag = Utils.getString(reporterConf.get(Config.STORM_METRICS_REPORTER_LOCALE), null);
         if (languageTag != null) {
             return Locale.forLanguageTag(languageTag);
         }
         return null;
     }
 
-    public static TimeUnit getMetricsRateUnit(Map stormConf) {
-        return getTimeUnitForCofig(stormConf, Config.STORM_DAEMON_METRICS_REPORTER_PLUGIN_RATE_UNIT);
+    public static String getMetricsJMXDomain(Map reporterConf) {
+        return Utils.getString(reporterConf, Config.STORM_METRICS_REPORTER_JMX_DOMAIN);
     }
 
-    public static TimeUnit getMetricsDurationUnit(Map stormConf) {
-        return getTimeUnitForCofig(stormConf, Config.STORM_DAEMON_METRICS_REPORTER_PLUGIN_DURATION_UNIT);
+    public static TimeUnit getMetricsRateUnit(Map reporterConf) {
+        return getTimeUnitForConfig(reporterConf, Config.STORM_METRICS_REPORTER_RATE_UNIT);
     }
 
-    private static TimeUnit getTimeUnitForCofig(Map stormConf, String configName) {
-        String rateUnitString = Utils.getString(stormConf.get(configName), null);
+    public static TimeUnit getMetricsDurationUnit(Map reporterConf) {
+        return getTimeUnitForConfig(reporterConf, Config.STORM_METRICS_REPORTER_DURATION_UNIT);
+    }
+
+    public static long getMetricsSchedulePeriod(Map reporterConf) {
+        return Utils.getInt(reporterConf.get(Config.STORM_METRICS_REPORTER_SCHEDULE_PERIOD), 10).longValue();
+    }
+
+    public static TimeUnit getMetricsSchedulePeriodUnit(Map reporterConf) {
+        TimeUnit unit = getTimeUnitForConfig(reporterConf, Config.STORM_METRICS_REPORTER_SCHEDULE_PERIOD_UNIT);
+        return unit == null ? TimeUnit.SECONDS : unit;
+    }
+
+    private static TimeUnit getTimeUnitForConfig(Map reporterConf, String configName) {
+        String rateUnitString = Utils.getString(reporterConf.get(configName), null);
         if (rateUnitString != null) {
             return TimeUnit.valueOf(rateUnitString);
         }
         return null;
     }
 
-    public static File getCsvLogDir(Map stormConf) {
-        String csvMetricsLogDirectory = Utils.getString(stormConf.get(Config.STORM_DAEMON_METRICS_REPORTER_CSV_LOG_DIR), null);
+    public static String getMetricsTargetHost(Map reporterConf) {
+        return Utils.getString(reporterConf.get(Config.STORM_METRICS_REPORTER_TARGET_HOST), null);
+    }
+
+    public static Integer getMetricsTargetPort(Map reporterConf) {
+        return Utils.getInt(reporterConf.get(Config.STORM_METRICS_REPORTER_TARGET_PORT), null);
+    }
+
+    public static String getMetricsTargetUDPGroup(Map reporterConf) {
+        return Utils.getString(reporterConf.get(Config.STORM_METRICS_REPORTER_TARGET_UDP_GROUP), null);
+    }
+
+    public static String getMetricsTargetUDPAddressingMode(Map reporterConf) {
+        return Utils.getString(reporterConf.get(Config.STORM_METRICS_REPORTER_TARGET_UDP_ADDRESSING_MODE), null);
+    }
+
+    public static Integer getMetricsTargetTtl(Map reporterConf) {
+        return Utils.getInt(reporterConf.get(Config.STORM_METRICS_REPORTER_TARGET_TTL), null);
+    }
+
+    public static String getMetricsTargetTransport(Map reporterConf) {
+        return Utils.getString(reporterConf.get(Config.STORM_METRICS_REPORTER_TARGET_TRANSPORT), "tcp");
+    }
+
+    public static String getMetricsPrefixedWith(Map reporterConf) {
+        return Utils.getString(reporterConf.get(Config.STORM_METRICS_REPORTER_PREFIXED_WITH), null);
+    }
+
+    public static File getCsvLogDir(Map stormConf, Map reporterConf) {
+        String csvMetricsLogDirectory = Utils.getString(reporterConf.get(Config.STORM_METRICS_REPORTER_CSV_LOG_DIR), null);
         if (csvMetricsLogDirectory == null) {
             csvMetricsLogDirectory = ConfigUtils.absoluteStormLocalDir(stormConf);
             csvMetricsLogDirectory = csvMetricsLogDirectory + ConfigUtils.FILE_SEPARATOR + "csvmetrics";

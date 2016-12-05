@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.storm.daemon.metrics.reporters;
+package org.apache.storm.metrics2.reporters;
 
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
@@ -33,19 +33,33 @@ public class JmxPreparableReporter implements PreparableReporter<JmxReporter> {
     JmxReporter reporter = null;
 
     @Override
-    public void prepare(MetricRegistry metricsRegistry, Map stormConf) {
+    public void prepare(MetricRegistry metricsRegistry, Map stormConf, Map reporterConf, String daemonId) {
         LOG.info("Preparing...");
         JmxReporter.Builder builder = JmxReporter.forRegistry(metricsRegistry);
-        String domain = Utils.getString(stormConf.get(Config.STORM_DAEMON_METRICS_REPORTER_PLUGIN_DOMAIN), null);
-        if (domain != null) {
-            builder.inDomain(domain);
+
+        TimeUnit durationUnit = MetricsUtils.getMetricsDurationUnit(reporterConf);
+        if (durationUnit != null) {
+            builder.convertDurationsTo(durationUnit);
         }
-        TimeUnit rateUnit = MetricsUtils.getMetricsRateUnit(stormConf);
+
+        TimeUnit rateUnit = MetricsUtils.getMetricsRateUnit(reporterConf);
         if (rateUnit != null) {
             builder.convertRatesTo(rateUnit);
         }
-        reporter = builder.build();
 
+        String domain = MetricsUtils.getMetricsJMXDomain(reporterConf);
+        if (domain != null) {
+            builder.inDomain(domain);
+        }
+
+        // TODO: expose some simple MetricFilters
+        // other builder functions not exposed:
+        //  * createsObjectNamesWith(ObjectNameFactory onFactory) 
+        //  * registerWith (MBeanServer)
+        //  * specificDurationUnits (Map<String,TimeUnit> specificDurationUnits)
+        //  * specificRateUnits(Map<String,TimeUnit> specificRateUnits)
+
+        reporter = builder.build();
     }
 
     @Override

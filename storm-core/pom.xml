@@ -36,6 +36,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.rocksdb</groupId>
+            <artifactId>rocksdbjni</artifactId>
+            <version>4.11.2</version>
+        </dependency>
         <!--Hadoop Mini Cluster cannot use log4j2 bridge,
             Surefire has a way to exclude the conflicting log4j API jar
             from the classpath, classpathDependencyExcludes, but it didn't work in practice.
@@ -279,6 +284,17 @@
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-graphite</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-ganglia</artifactId>
+            <version>3.1.0</version>
         </dependency>
         <dependency>
             <groupId>metrics-clojure</groupId>
