@@ -16,11 +16,13 @@
  * under the License.
  */
 
-package org.apache.storm.metrics2.store;
+package org.apache.storm.hbase.metrics2.store;
 
-import java.util.Map;
+import org.apache.storm.hbase.metrics2.store.IAggregator;
+import org.apache.storm.hbase.metrics2.store.Metric;
+
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 public interface MetricStore {
 
@@ -29,13 +31,13 @@ public interface MetricStore {
      * using the configurations provided via the config map
      * @param config Storm config map
      */
-    void prepare(Map config) throws MetricException;
+    void prepare(Map config);
 
     /**
      * Stores metrics in the store
      * @param metric Metric to store
      */
-    void insert(Metric metric);
+    void insert(org.apache.storm.hbase.metrics2.store.Metric metric);
 
     /**
      * Scans all metrics in the store

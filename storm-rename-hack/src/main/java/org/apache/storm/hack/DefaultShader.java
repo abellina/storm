@@ -197,7 +197,7 @@ public class DefaultShader {
                 LOG.debug("visitSource "+source);
                 if ( source == null )
                 {
-                    super.visitSource( source, debug );
+                    //super.visitSource( source, debug );
                 }
                 else
                 {
@@ -205,7 +205,7 @@ public class DefaultShader {
                     final String mappedSource = remapper.map( fqSource );
                     final String filename = mappedSource.substring( mappedSource.lastIndexOf( '/' ) + 1 );
                     LOG.debug("Remapped to "+filename);
-                    super.visitSource( filename, debug );
+                    //super.visitSource( filename, debug );
                 }
             }
         };
