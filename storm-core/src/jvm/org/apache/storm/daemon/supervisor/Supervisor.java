@@ -17,18 +17,6 @@
  */
 package org.apache.storm.daemon.supervisor;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.storm.Config;
 import org.apache.storm.StormTimer;
@@ -39,26 +27,28 @@ import org.apache.storm.cluster.IStormClusterState;
 import org.apache.storm.daemon.DaemonCommon;
 import org.apache.storm.daemon.supervisor.timer.SupervisorHealthCheck;
 import org.apache.storm.daemon.supervisor.timer.SupervisorHeartbeat;
-import org.apache.storm.daemon.supervisor.timer.WorkerStatsTimer;
 import org.apache.storm.daemon.supervisor.timer.UpdateBlobs;
+import org.apache.storm.daemon.supervisor.timer.WorkerStatsTimer;
 import org.apache.storm.event.EventManager;
 import org.apache.storm.event.EventManagerImp;
 import org.apache.storm.generated.LocalAssignment;
-import org.apache.storm.generated.LSWorkerStats;
 import org.apache.storm.localizer.AsyncLocalizer;
 import org.apache.storm.localizer.ILocalizer;
 import org.apache.storm.localizer.Localizer;
 import org.apache.storm.messaging.IContext;
 import org.apache.storm.metric.StormMetricsRegistry;
 import org.apache.storm.scheduler.ISupervisor;
-import org.apache.storm.utils.ConfigUtils;
-import org.apache.storm.utils.LocalState;
-import org.apache.storm.utils.Time;
-import org.apache.storm.utils.Utils;
-import org.apache.storm.utils.VersionInfo;
+import org.apache.storm.utils.*;
 import org.apache.zookeeper.data.ACL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Supervisor implements DaemonCommon, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(Supervisor.class);
@@ -344,6 +334,10 @@ public class Supervisor implements DaemonCommon, AutoCloseable {
                 throw Utils.wrapInRuntime(e);
             }
         }
+    }
+
+    public Slot getSlot(int port) {
+        return readState.getSlot(port);
     }
 
     @Override

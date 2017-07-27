@@ -18,24 +18,16 @@
 
 package org.apache.storm.container.cgroup;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.storm.Config;
 import org.apache.storm.container.ResourceIsolationInterface;
 import org.apache.storm.container.cgroup.core.CpuCore;
 import org.apache.storm.container.cgroup.core.MemoryCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Class that implements ResourceIsolationInterface that manages cgroups
@@ -53,6 +45,8 @@ public class CgroupManager implements ResourceIsolationInterface {
     private String rootDir;
 
     private Map<String, Object> conf;
+
+    private HashMap<String, CgroupCpuStats> cpuStatsMap;
 
     /**
      * initialize intial data structures
@@ -74,6 +68,9 @@ public class CgroupManager implements ResourceIsolationInterface {
         if (this.center == null) {
             throw new RuntimeException("Cgroup error, please check /proc/cgroups");
         }
+
+        this.cpuStatsMap = new HashMap<>();
+
         this.prepareSubSystem(this.conf);
     }
 
@@ -220,4 +217,18 @@ public class CgroupManager implements ResourceIsolationInterface {
         }
         return workerGroup.getPids();
     }
+
+    @Override
+    public Map<String, Long> getCpuUsage(String workerId) throws IOException {
+
+        if (!cpuStatsMap.containsKey(workerId)) {
+            CgroupCommon workerGroup = new CgroupCommon(workerId, this.hierarchy, this.rootCgroup);
+            CgroupCpuStats stat = new CgroupCpuStats(workerGroup);
+            cpuStatsMap.put(workerId, stat);
+            return stat.getStats();
+        }
+
+        return cpuStatsMap.get(workerId).getStats();
+    }
+
 }

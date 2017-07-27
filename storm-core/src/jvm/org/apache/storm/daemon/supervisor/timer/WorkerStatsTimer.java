@@ -18,39 +18,28 @@
 package org.apache.storm.daemon.supervisor.timer;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.storm.generated.LocalStateData;
-import org.apache.storm.utils.ConfigUtils;
-import org.apache.storm.Config;
 import org.apache.storm.cluster.IStormClusterState;
+import org.apache.storm.daemon.supervisor.Slot;
 import org.apache.storm.daemon.supervisor.Supervisor;
-import org.apache.storm.localizer.Localizer;
-import org.apache.storm.generated.SupervisorInfo;
-import org.apache.storm.generated.SupervisorWorkerStats;
-import org.apache.storm.generated.LSWorkerStats;
-import org.apache.storm.generated.LocalAssignment;
-import org.apache.storm.generated.WorkerStats;
-import org.apache.storm.utils.Time;
-import org.apache.storm.utils.Utils;
-import org.apache.storm.utils.TimeseriesStore;
+import org.apache.storm.generated.*;
+import org.apache.storm.metric.StatsPusher;
+import org.apache.storm.utils.ConfigUtils;
 import org.apache.storm.utils.LocalState;
-import org.apache.storm.generated.ThriftSerializedObject;
+import org.apache.storm.utils.Time;
+import org.apache.storm.utils.TimeseriesStore;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TDeserializer;
-import org.apache.thrift.TSerializer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-import org.apache.storm.metric.StatsPusher;
 
 public class WorkerStatsTimer implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(WorkerStatsTimer.class);
@@ -177,6 +166,22 @@ public class WorkerStatsTimer implements Runnable {
                 workerStats.set_storm_id(workerAssignment.get_topology_id());
                 workerStats.set_port(port);
                 workerStats.set_executor_infos(workerAssignment.get_executors());
+
+                Slot slot = supervisor.getSlot(port);
+
+                LSWorkerStats cpuStats = new LSWorkerStats();
+                cpuStats.set_time_stamp(Time.currentTimeMillis());
+                Map<String, Long> slotCpuUsage = slot.getSlotCpuUsage();
+
+                if (slotCpuUsage != null) {
+                    Long user = slotCpuUsage.get("user-ms");
+                    Long sys = slotCpuUsage.get("sys-ms");
+                    LOG.info("worker: {}, user cpu = {}, sys = {}", workerId, user, sys);
+                    cpuStats.put_to_metrics("[-1--1].__system.__system.cpu_usage_user", user.doubleValue());
+                    cpuStats.put_to_metrics("[-1--1].__system.__system.cpu_usage_sys", sys.doubleValue());
+                    workerStats.put_to_metrics(cpuStats.get_time_stamp(), cpuStats);
+                }
+
                 for (LSWorkerStats stat : stats) {
                     workerStats.put_to_metrics(stat.get_time_stamp(), stat);
                 }

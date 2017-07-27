@@ -15,19 +15,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.storm.metrics2.store;
 
-import java.util.List;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
+import org.apache.storm.generated.Window;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//TODO: this should be an internal enum
-import org.apache.storm.generated.Window;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class Aggregation {
     private final static Logger LOG = LoggerFactory.getLogger(Aggregation.class);
@@ -43,8 +38,8 @@ public class Aggregation {
     // Todo: Filter for different instances of the same field, two hosts for example
 
     public void filterMetric(String metric) {
-        HashSet<String> metricSet = (HashSet<String>)this.settings.get(StringKeywords.metricSet);
-        if (metricSet == null){
+        HashSet<String> metricSet = (HashSet<String>) this.settings.get(StringKeywords.metricSet);
+        if (metricSet == null) {
             metricSet = new HashSet<String>();
             this.settings.put(StringKeywords.metricSet, metricSet);
         }
@@ -76,13 +71,13 @@ public class Aggregation {
         this.settings.put(StringKeywords.aggLevel, comp);
     }
 
-    public HashMap<String, Object> getSettings(){
+    public HashMap<String, Object> getSettings() {
         return this.settings;
     }
 
     public void filterTime(Long timeStart, Long timeEnd, Window window) {
-        HashSet<TimeRange> timeRangeSet = (HashSet<TimeRange>)this.settings.get(StringKeywords.timeRangeSet);
-        if (timeRangeSet == null){
+        HashSet<TimeRange> timeRangeSet = (HashSet<TimeRange>) this.settings.get(StringKeywords.timeRangeSet);
+        if (timeRangeSet == null) {
             timeRangeSet = new HashSet<TimeRange>();
             this.settings.put(StringKeywords.timeRangeSet, timeRangeSet);
         }
@@ -92,13 +87,13 @@ public class Aggregation {
 
     public void raw(MetricStore store, IAggregator agg) throws MetricException {
         MetricResult result = new MetricResult();
-        store.scan (settings, agg);
+        store.scan(settings, agg);
     }
     // Aggregations
 
     public MetricResult sum(MetricStore store) throws MetricException {
         MetricResult result = new MetricResult();
-        store.scan (settings, (metric, timeRanges) -> {
+        store.scan(settings, (metric, timeRanges) -> {
             String metricName = metric.getMetricName();
             for (TimeRange tr : timeRanges) {
                 Double value = result.getValueFor(metricName, tr);
@@ -116,12 +111,15 @@ public class Aggregation {
         store.scan(settings, (metric, timeRanges) -> {
             String metricName = metric.getMetricName();
             for (TimeRange tr : timeRanges) {
+
                 Double value = metric.getMin();
-                value = value == null ? 0.0 : value;
-                Double prev = result.getValueFor(metricName, tr);
-                prev = prev == null ? 0.0 : prev;
-                result.setValueFor(metricName, tr, Math.min(value, prev));
-                result.incCountFor(metricName, tr);
+                Double prev  = result.getValueFor(metricName, tr);
+                prev = (prev == null) ? Double.MAX_VALUE : prev;
+
+                if (value != null) {
+                    result.setValueFor(metricName, tr, Math.min(value, prev));
+                    result.incCountFor(metricName, tr);
+                }
             }
         });
         return result;
@@ -133,11 +131,13 @@ public class Aggregation {
             String metricName = metric.getMetricName();
             for (TimeRange tr : timeRanges) {
                 Double value = metric.getMax();
-                value = value == null ? 0.0 : value;
-                Double prev = result.getValueFor(metricName, tr);
-                prev = prev == null ? 0.0 : prev;
-                result.setValueFor(metricName, tr, Math.max(value, prev));
-                result.incCountFor(metricName, tr);
+                Double prev  = result.getValueFor(metricName, tr);
+                prev = prev == null ? Double.MIN_VALUE : prev;
+
+                if (value != null) {
+                    result.setValueFor(metricName, tr, Math.max(value, prev));
+                    result.incCountFor(metricName, tr);
+                }
             }
         });
         return result;
@@ -145,30 +145,29 @@ public class Aggregation {
 
     public MetricResult mean(MetricStore store) throws MetricException {
         MetricResult result = new MetricResult();
+        HashSet<TimeRange> settingsTR = (HashSet<TimeRange>) settings.get(StringKeywords.timeRangeSet);
         store.scan(settings, (metric, timeRanges) -> {
             String metricName = metric.getMetricName();
             for (TimeRange tr : timeRanges) {
                 // for an hourly bucket, this is a sum
                 Double value = metric.getValue();
-                //TODO: if (the metric isn't in the settings, don't include it in the result) {
-                //TODO:     // OR split the result into sums, avgs, maxes, etc. ==> easier
-                //TODO: }
-                value = value == null ? 0.0 : value;
-                Double prev = result.getValueFor(metricName, tr);
+                Double prev  = result.getValueFor(metricName, tr);
                 prev = prev == null ? 0.0 : prev;
-                result.setValueFor(metricName, tr, value + prev);
-                result.incCountFor(metricName, tr, metric.getCount());
+
+                if (value != null) {
+                    result.setValueFor(metricName, tr, value + prev);
+                    result.incCountFor(metricName, tr, metric.getCount());
+                }
             }
         });
-        //TODO: this could happen in the loop above
+
         for (String metricName : result.getMetricNames()) {
-            for (TimeRange tr : result.getTimeRanges(metricName)){
-                Long count = result.getCountFor(metricName, tr);
+            for (TimeRange tr : result.getTimeRanges(metricName)) {
+                Long   count = result.getCountFor(metricName, tr);
+                Double sum   = result.getValueFor(metricName, tr);
                 if (count != null && count > 0) {
-                    LOG.info("perform avg for {} {} {} / {} = {}", metricName, tr, result.getValueFor(metricName, tr), count);
-                    result.setValueFor(metricName, tr, 
-                            result.getValueFor(metricName, tr) / 
-                            count);
+                    LOG.info("AVG: {} {}, {} / {} = {}", metricName, tr, sum, count, sum / count);
+                    result.setValueFor(metricName, tr, sum / count);
                 }
             }
         }

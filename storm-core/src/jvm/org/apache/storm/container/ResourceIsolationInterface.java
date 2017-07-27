@@ -73,4 +73,13 @@ public interface ResourceIsolationInterface {
      * @throws IOException on any error
      */
     Set<Long> getRunningPIDs(String workerId) throws IOException;
+
+    /**
+     * Get total CPU usage
+     * @param workerId id of the worker to get usage for
+     * @return Map of user and system cpu usage
+     * @throws IOException on any error
+     */
+    Map<String, Long> getCpuUsage(String workerId) throws IOException;
+
 }

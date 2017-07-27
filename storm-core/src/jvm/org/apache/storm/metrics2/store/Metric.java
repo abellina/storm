@@ -18,14 +18,12 @@
 
 package org.apache.storm.metrics2.store;
 
-import java.lang.String;
-import java.lang.StringBuilder;
-import java.util.Date;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Metric {
     private final static Logger LOG = LoggerFactory.getLogger(Metric.class);
@@ -45,12 +43,12 @@ public class Metric {
     private double sum = 0.0;
     private double min = 0.0;
     private double max = 0.0;
-    private Byte aggLevel = (byte)0; // raw values are not aggregated
+    private Byte aggLevel = (byte) 0; // raw values are not aggregated
 
     public Metric() {
     }
 
-    public Metric(String metric, Long timestamp, String executor, String compId, 
+    public Metric(String metric, Long timestamp, String executor, String compId,
                   String stream, String topoIdStr, Double value) {
         this.metricName = metric;
         this.timestamp = timestamp;
@@ -58,7 +56,49 @@ public class Metric {
         this.compIdStr = compId;
         this.topoIdStr = topoIdStr;
         this.stream = stream;
-        this.value = value;
+        this.setValue(value);
+    }
+
+    public Metric(Metric o) {
+        this.aggLevel = o.getAggLevel();
+        this.topoIdStr = o.getTopoIdStr();
+        this.timestamp = o.getTimeStamp();
+        this.metricName = o.getMetricName();
+        this.compIdStr = o.getCompName();
+        this.executor = o.getExecutor();
+        this.host = o.getHost();
+        this.port = o.getPort();
+        this.stream = o.getStream();
+
+        this.count = o.getCount();
+        this.value = o.value;
+        this.sum = o.getSum();
+        this.min = o.getMin();
+        this.max = o.getMax();
+    }
+
+    public boolean equals(Object o) {
+
+        if (o instanceof Metric == false)
+            return false;
+
+        Metric other = (Metric) o;
+
+        return this == other ||
+                (this.metricName.equals(other.getMetricName()) &&
+                        this.topoIdStr.equals(other.getTopoIdStr()) &&
+                        this.host.equals(other.getHost()) &&
+                        this.port == other.getPort() &&
+                        this.compIdStr.equals(other.getCompName()) &&
+                        this.timestamp == other.getTimeStamp() &&
+                        this.executor.equals(other.getExecutor()) &&
+                        this.stream.equals(other.getStream()) &&
+                        this.count == other.getCount() &&
+                        this.value == other.getValue() &&
+                        this.sum == other.getSum() &&
+                        this.min == other.getMin() &&
+                        this.max == other.getMax());
+
     }
 
     public void setValue(Double value) {
@@ -70,8 +110,10 @@ public class Metric {
     }
 
     public Double getValue() {
-        if (this.aggLevel == 0){
-            return this.value; 
+        //return this.value;
+        // why?
+        if (this.aggLevel == 0) {
+            return this.value;
         } else {
             return this.sum;
         }
@@ -86,52 +128,122 @@ public class Metric {
         LOG.debug("updating average {} {} {} {} {}", count, min, max, sum, value);
     }
 
-    public void setOwner(String owner){ this.owner = owner; }
-    public String getOwner() { return this.owner; }
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
 
-    public void setAggLevel(Byte aggLevelInMins){ this.aggLevel = aggLevelInMins; }
-    public Byte getAggLevel(){ return this.aggLevel; }
+    public String getOwner() {
+        return this.owner;
+    }
 
-    public void setCompName(String compName) { this.compIdStr = compName; }
-    public String getCompName() { return this.compIdStr; }
+    public void setAggLevel(Byte aggLevelInMins) {
+        this.aggLevel = aggLevelInMins;
+    }
 
-    public void setTimeStamp(Long timestamp) { this.timestamp = timestamp; }
-    public Long getTimeStamp() { return this.timestamp; }
+    public Byte getAggLevel() {
+        return this.aggLevel;
+    }
 
-    public void setTopoIdStr(String topoIdStr) { this.topoIdStr = topoIdStr; }
-    public String getTopoIdStr() { return this.topoIdStr; }
+    public void setCompName(String compName) {
+        this.compIdStr = compName;
+    }
 
-    public void setMetricName(String metricName) { this.metricName = metricName; }
-    public String getMetricName() { return this.metricName; }
-    
-    public void setExecutor(String executor){ this.executor = executor; }
-    public String getExecutor(){ return this.executor; }
+    public String getCompName() {
+        return this.compIdStr;
+    }
 
-    public void setHost(String host) { this.host = host; }
-    public String getHost() { return this.host; }
+    public void setTimeStamp(Long timestamp) {
+        this.timestamp = timestamp;
+    }
 
-    public void setPort(Long port) { this.port = port; }
-    public Long getPort() { return this.port; }
+    public Long getTimeStamp() {
+        return this.timestamp;
+    }
 
-    public void setStream(String stream) { this.stream = stream; }
-    public String getStream() { return this.stream; }
+    public void setTopoIdStr(String topoIdStr) {
+        this.topoIdStr = topoIdStr;
+    }
 
-    public void setCount(long count) { this.count = count; }
-    public long getCount() { return this.count; }
+    public String getTopoIdStr() {
+        return this.topoIdStr;
+    }
 
-    public void setMin(Double min) { this.min = min; }
-    public Double getMin() { return this.min; }
+    public void setMetricName(String metricName) {
+        this.metricName = metricName;
+    }
 
-    public void setMax(Double max) { this.max = max; }
-    public Double getMax() { return this.max; }
+    public String getMetricName() {
+        return this.metricName;
+    }
 
-    public void setSum(Double sum) { this.sum = sum; }
-    public Double getSum() { return this.sum; }
+    public void setExecutor(String executor) {
+        this.executor = executor;
+    }
+
+    public String getExecutor() {
+        return this.executor;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public String getHost() {
+        return this.host;
+    }
+
+    public void setPort(Long port) {
+        this.port = port;
+    }
+
+    public Long getPort() {
+        return this.port;
+    }
+
+    public void setStream(String stream) {
+        this.stream = stream;
+    }
+
+    public String getStream() {
+        return this.stream;
+    }
+
+    public void setCount(long count) {
+        this.count = count;
+    }
+
+    public long getCount() {
+        return this.count;
+    }
+
+    public void setMin(Double min) {
+        this.min = min;
+    }
+
+    public Double getMin() {
+        return this.min;
+    }
+
+    public void setMax(Double max) {
+        this.max = max;
+    }
+
+    public Double getMax() {
+        return this.max;
+    }
+
+    public void setSum(Double sum) {
+        this.sum = sum;
+    }
+
+    public Double getSum() {
+        return this.sum;
+    }
 
     public String toString() {
-        StringBuilder x = new StringBuilder();
-        Date date = new Date(this.timestamp);
-        DateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        StringBuilder x      = new StringBuilder();
+        Date          date   = new Date(this.timestamp);
+        DateFormat    format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         x.append(format.format(date));
         x.append("|");
         x.append(this.topoIdStr);
@@ -150,11 +262,11 @@ public class Metric {
         x.append("|");
         x.append(this.stream);
         return String.format("%s -- count: %d -- value: %f -- min: %f -- max: %f -- sum: %f",
-                x.toString(), 
+                x.toString(),
                 this.count,
-                this.value, 
+                this.value,
                 this.min,
-                this.max, 
+                this.max,
                 this.sum);
     }
 }

@@ -17,34 +17,22 @@
  */
 package org.apache.storm.daemon.supervisor;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Writer;
-import java.lang.ProcessBuilder.Redirect;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.storm.Config;
 import org.apache.storm.container.ResourceIsolationInterface;
-import org.apache.storm.generated.LSWorkerStats;
 import org.apache.storm.generated.LSWorkerHeartbeat;
 import org.apache.storm.generated.LocalAssignment;
 import org.apache.storm.generated.ProfileRequest;
 import org.apache.storm.utils.ConfigUtils;
 import org.apache.storm.utils.LocalState;
 import org.apache.storm.utils.Utils;
-import org.apache.storm.metric.StatsPusher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
+
+import java.io.*;
+import java.lang.ProcessBuilder.Redirect;
+import java.nio.file.Files;
+import java.util.*;
 
 /**
  * Represents a container that a worker will run in.
@@ -452,7 +440,20 @@ public abstract class Container implements Killable {
         
         return ret;
     }
-    
+
+    /**
+     * Get current CPU usage from resource isolation manager
+     * @return Map with user and system cpu usage
+     * @throws IOException on any error
+     */
+    protected Map<String, Long> getCpuUsage() throws IOException {
+        if (_resourceIsolationManager != null){
+            return _resourceIsolationManager.getCpuUsage(_workerId);
+        }
+        LOG.info("_resourceIsolationManager is null");
+        return null;
+    }
+
     /** 
      * @return the user that some operations should be done as.
      * @throws IOException on any error

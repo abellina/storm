@@ -66,8 +66,8 @@ public class MetricStoreConfig {
      * @throws MetricException
      */
     private static void validateConfig(Map conf) throws MetricException{
-        if (!(conf.containsKey("storm.metrics2.store.connector_class"))) {
-            throw new MetricException("Not a vaild metrics configuration - Missing store type");
+        if (!(conf.containsKey("storm.metrics2.store.class"))) {
+            throw new MetricException("Not a valid metrics configuration - Missing store type");
         }
     }
 }

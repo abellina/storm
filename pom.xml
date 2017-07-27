@@ -15,7 +15,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -251,7 +252,7 @@
         <clojure.tools.cli.version>0.2.4</clojure.tools.cli.version>
         <disruptor.version>3.3.2</disruptor.version>
         <jgrapht.version>0.9.0</jgrapht.version>
-        <guava.version>16.0.1</guava.version>
+        <guava.version>14.0</guava.version>
         <netty.version>3.9.0.Final</netty.version>
         <sysout-over-slf4j.version>1.0.2</sysout-over-slf4j.version>
         <log4j-over-slf4j.version>1.6.6</log4j-over-slf4j.version>
@@ -289,7 +290,8 @@
 
         <!-- Java and clojure build lifecycle test properties are defined here to avoid having to create a default profile -->
         <java.unit.test.exclude>org.apache.storm.testing.IntegrationTest</java.unit.test.exclude>
-        <java.unit.test.include>**/Test*.java, **/*Test.java, **/*TestCase.java</java.unit.test.include>    <!--maven surefire plugin default test list-->
+        <java.unit.test.include>**/Test*.java, **/*Test.java, **/*TestCase.java
+        </java.unit.test.include>    <!--maven surefire plugin default test list-->
         <!-- by default the clojure test set are all clojure tests that are not integration tests. This property is overridden in the profiles -->
         <clojure.test.set>!integration.*</clojure.test.set>
 

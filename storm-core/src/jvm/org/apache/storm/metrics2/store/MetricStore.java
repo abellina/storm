@@ -18,27 +18,31 @@
 
 package org.apache.storm.metrics2.store;
 
-import java.util.Map;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 public interface MetricStore {
 
     /**
      * Create RocksDB instance
      * using the configurations provided via the config map
+     *
      * @param config Storm config map
+     * @return this for invocation chaining
+     * @throws MetricException on preparation error
      */
-    void prepare(Map config);
+    MetricStore prepare(Map config) throws MetricException;
 
     /**
      * Stores metrics in the store
+     *
      * @param metric Metric to store
      */
     void insert(Metric metric);
 
     /**
      * Scans all metrics in the store
+     *
      * @return List<Double> metrics in store
      */
     void scan(IAggregator agg);
@@ -46,6 +50,7 @@ public interface MetricStore {
     /**
      * Implements scan method of the Metrics Store, scans all metrics with settings in the store
      * Will try to search the fastest way possible
+     *
      * @param settings map of settings to search by
      * @return List<Double> metrics in store
      */
