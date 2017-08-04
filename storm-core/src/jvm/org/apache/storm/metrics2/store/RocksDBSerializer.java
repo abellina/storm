@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,21 +18,16 @@
 package org.apache.storm.metrics2.store;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.storm.generated.StatsMetadataTopo;
 import org.apache.storm.generated.StatsMetadata;
+import org.apache.storm.generated.StatsMetadataTopo;
 import org.apache.thrift.TDeserializer;
-import org.apache.thrift.TSerializer;
 import org.apache.thrift.TException;
-
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Arrays;
-import java.nio.ByteBuffer;
-
+import org.apache.thrift.TSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.ByteBuffer;
+import java.util.*;
 
 public class RocksDBSerializer {
     private final static Logger LOG = LoggerFactory.getLogger(RocksDBSerializer.class);
@@ -69,38 +64,38 @@ public class RocksDBSerializer {
 
     public boolean isInitialized() {
         return _initialized;
-    } 
+    }
 
     public Set<String> getTopoIds() {
         return _metaTopos.get_topo_ids().keySet();
     }
 
-    public Integer getTopoId(String topoId){
+    public Integer getTopoId(String topoId) {
         return fetchOrCreate(_metaTopos.get_topo_ids(), _revTopoIds, topoId);
     }
 
-    public Integer getHostId(String hostId){
+    public Integer getHostId(String hostId) {
         return fetchOrCreate(_metaTopos.get_host_ids(), _revHostIds, hostId);
     }
 
-    public Integer getStreamId(String streamId){
+    public Integer getStreamId(String streamId) {
         return fetchOrCreate(_metaTopos.get_stream_ids(), _revStreamIds, streamId);
     }
 
-    public String getTopo(Integer topoId){
+    public String getTopo(Integer topoId) {
         return _revTopoIds.get(topoId);
     }
 
-    public String getStream(Integer streamId){
+    public String getStream(Integer streamId) {
         return _revStreamIds.get(streamId);
     }
 
-    public String getHost(Integer hostId){
+    public String getHost(Integer hostId) {
         return _revHostIds.get(hostId);
     }
 
     public Integer fetchOrCreate(Map<String, Integer> map, Map<Integer, String> rmap, String key) {
-        if (map.containsKey(key)){
+        if (map.containsKey(key)) {
             return map.get(key);
         }
         Integer num = map.size();
@@ -181,11 +176,11 @@ public class RocksDBSerializer {
 
     }
 
-    public boolean putToTopoMap(byte[] key, byte[] value){
+    public boolean putToTopoMap(byte[] key, byte[] value) {
         ByteBuffer bb = ByteBuffer.wrap(key);
         //TODO: store these byte values here
-        if ((byte)0 != bb.get() ||
-            (byte)0 != bb.get()){ // second byte is metadata type
+        if ((byte) 0 != bb.get() ||
+                (byte) 0 != bb.get()) { // second byte is metadata type
             return false;
         }
         //TODO: change thrift object so these are all longs
@@ -202,10 +197,10 @@ public class RocksDBSerializer {
         return true;
     }
 
-    public boolean putToStreamMap(byte[] key, byte[] value){
+    public boolean putToStreamMap(byte[] key, byte[] value) {
         ByteBuffer bb = ByteBuffer.wrap(key);
-        if ((byte)0 != bb.get() ||
-            (byte)1 != bb.get()){ // second byte is metadata type
+        if ((byte) 0 != bb.get() ||
+                (byte) 1 != bb.get()) { // second byte is metadata type
             return false;
         }
         Integer streamId = bb.getInt();
@@ -220,10 +215,10 @@ public class RocksDBSerializer {
         return true;
     }
 
-    public boolean putToHostMap(byte[] key, byte[] value){
+    public boolean putToHostMap(byte[] key, byte[] value) {
         ByteBuffer bb = ByteBuffer.wrap(key);
-        if ((byte)0 != bb.get() ||
-            (byte)2 != bb.get()){ // second byte is metadata type
+        if ((byte) 0 != bb.get() ||
+                (byte) 2 != bb.get()) { // second byte is metadata type
             return false;
         }
         Integer hostId = bb.getInt();
@@ -237,11 +232,11 @@ public class RocksDBSerializer {
         }
         return true;
     }
-    
-    public byte[] makeKey(byte type, Integer key){
+
+    public byte[] makeKey(byte type, Integer key) {
         //TODO: size too big
         ByteBuffer bb = ByteBuffer.allocate(14);
-        bb.put((byte)0); // metadata
+        bb.put((byte) 0); // metadata
         bb.put(type);    // metadata type
         bb.putInt(key == null ? 0 : key);
 
@@ -250,12 +245,12 @@ public class RocksDBSerializer {
         byte[] result = new byte[length];
         bb.get(result, 0, length);
         return result;
-    } 
+    }
 
     private byte[] metadataKey(Integer topoId) {
         ByteBuffer bb = ByteBuffer.allocate(320);
-        bb.put((byte)0); // metadata
-        bb.put((byte)3); // topo metadata
+        bb.put((byte) 0); // metadata
+        bb.put((byte) 3); // topo metadata
         bb.putInt(topoId);
         bb.putLong(0);
         bb.putInt(0);
@@ -272,21 +267,23 @@ public class RocksDBSerializer {
         return result;
     }
 
-    public void populate(Metric m, byte[] valueInBytes){
+    public void populate(Metric m, byte[] valueInBytes) {
         if (valueInBytes == null) {
-            m.setCount(0L);
             m.setValue(0.0);
             m.setMin(0.0);
             m.setMax(0.0);
             m.setSum(0.0);
+            m.setCount(0L);
             return;
         }
         ByteBuffer bb = ByteBuffer.wrap(valueInBytes);
-        m.setCount(bb.getLong());
+        // count must be set after setValue()
+        long count = bb.getLong();
         m.setValue(bb.getDouble());
         m.setMin(bb.getDouble());
         m.setMax(bb.getDouble());
         m.setSum(bb.getDouble());
+        m.setCount(count);
     }
 
     public boolean metaInitialized(Metric m) {
@@ -294,7 +291,7 @@ public class RocksDBSerializer {
         return meta.initialized();
     }
 
-    public void deserializeMeta(String topoId, byte[] data){
+    public void deserializeMeta(String topoId, byte[] data) {
         Metadata meta = getInstance(topoId);
         if (meta.initialized()) {
             return;
@@ -302,23 +299,23 @@ public class RocksDBSerializer {
         meta.deserialize(data);
     }
 
-    public Metric deserialize(byte[] data){
+    public Metric deserialize(byte[] data) {
         // attempt to find the topoId, and in turn the Metadata instance
         // if not found in memory, seek out to RocksDBStore for the bytew 
         if (data != null) {
             ByteBuffer bb = ByteBuffer.wrap(data);
 
             byte type = bb.get(); // type (ignore)
-            if (type != (byte)1) {
+            if (type != (byte) 1) {
                 // type is metadata
                 return null;
             }
-            byte aggLevel = bb.get(); // agg level, disregard
-            Integer topoId = bb.getInt();
+            byte    aggLevel = bb.get(); // agg level, disregard
+            Integer topoId   = bb.getInt();
 
             // popoulate if you haven't already
-            Metadata meta  = getInstance(topoId);
-            if (!meta.initialized()){
+            Metadata meta = getInstance(topoId);
+            if (!meta.initialized()) {
                 meta.deserialize(data);
             }
 
@@ -346,7 +343,7 @@ public class RocksDBSerializer {
         return null;
     }
 
-    public void deserializeTopoMap(byte[] data){
+    public void deserializeTopoMap(byte[] data) {
         if (data != null) {
             TDeserializer dser = new TDeserializer();
             try {
@@ -354,7 +351,7 @@ public class RocksDBSerializer {
                 // populate reverse collections
                 populateTopoReverseCollection();
                 LOG.debug("Metadata deserialized: {}", _metaTopos);
-            } catch (TException ex){
+            } catch (TException ex) {
                 LOG.error("Metadata failed to deserialize!", ex);
             }
         }
@@ -387,47 +384,48 @@ public class RocksDBSerializer {
         return getInstance(topoIdStr);
     }
 
-    public String contents(){
-       return String.format (
-           "topos: %s, rtopos: %s\n" +
-           "streamIds: %s, rstreamIds: %s\n" +
-           "hostIds: %s, rhostIds: %s\n",
-           Arrays.toString(_metaTopos.get_topo_ids().entrySet().toArray()),
-           Arrays.toString(_revTopoIds.entrySet().toArray()),
+    public String contents() {
+        return String.format(
+                "topos: %s, rtopos: %s\n" +
+                        "streamIds: %s, rstreamIds: %s\n" +
+                        "hostIds: %s, rhostIds: %s\n",
+                Arrays.toString(_metaTopos.get_topo_ids().entrySet().toArray()),
+                Arrays.toString(_revTopoIds.entrySet().toArray()),
 
-           Arrays.toString(_metaTopos.get_stream_ids().entrySet().toArray()),
-           Arrays.toString(_revStreamIds.entrySet().toArray()),
+                Arrays.toString(_metaTopos.get_stream_ids().entrySet().toArray()),
+                Arrays.toString(_revStreamIds.entrySet().toArray()),
 
-           Arrays.toString(_metaTopos.get_host_ids().entrySet().toArray()),
-           Arrays.toString(_revHostIds.entrySet().toArray()));
+                Arrays.toString(_metaTopos.get_host_ids().entrySet().toArray()),
+                Arrays.toString(_revHostIds.entrySet().toArray()));
     }
 
-    public byte[] createPrefix(Map<String, Object> settings){
-        String topoIdStr   = (String) settings.get(StringKeywords.topoId);
-        HashSet<String> metricIds = (HashSet<String>) settings.get(StringKeywords.metricSet);
-        String metricIdStr = null;
-        if (metricIds != null && metricIds.size() == 1){
+    public byte[] createPrefix(Map<String, Object> settings) {
+        String          topoIdStr   = (String) settings.get(StringKeywords.topoId);
+        HashSet<String> metricIds   = (HashSet<String>) settings.get(StringKeywords.metricSet);
+        String          metricIdStr = null;
+        if (metricIds != null && metricIds.size() == 1) {
             metricIdStr = metricIds.iterator().next();
         }
 
-        String compIdStr   = (String) settings.get(StringKeywords.component);
-        String execIdStr   = (String) settings.get(StringKeywords.executor);
-        String host        = (String) settings.get(StringKeywords.host);
-        String port        = (String) settings.get(StringKeywords.port);
-        String stream      = (String) settings.get(StringKeywords.stream);
-        Byte aggLevel      = ((Integer) settings.get(StringKeywords.aggLevel)).byteValue();
+        String  compIdStr   = (String) settings.get(StringKeywords.component);
+        String  execIdStr   = (String) settings.get(StringKeywords.executor);
+        String  host        = (String) settings.get(StringKeywords.host);
+        String  port        = (String) settings.get(StringKeywords.port);
+        String  stream      = (String) settings.get(StringKeywords.stream);
+        Integer aggLevelInt = (Integer) settings.get(StringKeywords.aggLevel);
+        Byte    aggLevel    = (aggLevelInt != null) ? aggLevelInt.byteValue() : (byte) 0;
 
         Metadata m = getInstance(topoIdStr);
 
         ByteBuffer bb = ByteBuffer.allocate(320);
-        bb.put((byte)1); // non metadata
+        bb.put((byte) 1); // non metadata
         bb.put(aggLevel);
-        Set<TimeRange> timeRangeSet = (Set<TimeRange>)settings.get(StringKeywords.timeRangeSet);
-        Long cur = 0L;
-        if (timeRangeSet != null){
+        Set<TimeRange> timeRangeSet = (Set<TimeRange>) settings.get(StringKeywords.timeRangeSet);
+        Long           cur          = 0L;
+        if (timeRangeSet != null) {
             Long minTime = null;
-            for (TimeRange tr : timeRangeSet){
-                if (minTime == null || tr.startTime < minTime){
+            for (TimeRange tr : timeRangeSet) {
+                if (minTime == null || tr.startTime < minTime) {
                     minTime = tr.startTime;
                 }
             }
@@ -438,18 +436,18 @@ public class RocksDBSerializer {
         bb.putInt(getTopoId(topoIdStr));
         bb.putLong(cur == null ? 0L : cur.longValue());
         bb.putInt(metricIdStr != null ? m.getMetricId(metricIdStr) : 0);
-        bb.putInt(compIdStr   != null ? m.getCompId(compIdStr) : 0);
-        bb.putInt(execIdStr   != null ? m.getExecId(execIdStr) : 0);
-        bb.putInt(host        != null ? getHostId(host) : 0);
-        bb.putLong(port       != null ? Long.parseLong(port) : 0L);
-        bb.putInt(stream      != null ? getStreamId(stream) : 0);
+        bb.putInt(compIdStr != null ? m.getCompId(compIdStr) : 0);
+        bb.putInt(execIdStr != null ? m.getExecId(execIdStr) : 0);
+        bb.putInt(host != null ? getHostId(host) : 0);
+        bb.putLong(port != null ? Long.parseLong(port) : 0L);
+        bb.putInt(stream != null ? getStreamId(stream) : 0);
 
-        int length= bb.position();
+        int length = bb.position();
         bb.position(0); // go to beginning
         byte[] result = new byte[length];
         bb.get(result, 0, length); // copy to position
 
-        LOG.info("Creating prefix for {}, {} {} {} {} {} {} {} {} {}\n => {}\nMeta: \n{}", 
+        LOG.info("Creating prefix for {}, {} {} {} {} {} {} {} {} {}\n => {}\nMeta: \n{}",
                 cur, aggLevel, topoIdStr, metricIds, metricIdStr, compIdStr, execIdStr, host, port, stream, Hex.encodeHexString(result), m);
 
         return result;
@@ -465,7 +463,7 @@ public class RocksDBSerializer {
         private boolean _hasChanged = false;
         private boolean _initialized = false;
 
-        public Metadata(String topoIdStr, Integer topoId){
+        public Metadata(String topoIdStr, Integer topoId) {
             // reverse colletions to find the string ids in constant time
             _meta = new StatsMetadata();
             _topoId = topoId;
@@ -477,12 +475,12 @@ public class RocksDBSerializer {
             _meta.set_metric_ids(new HashMap<String, Integer>());
             _meta.set_executor_ids(new HashMap<String, Integer>());
         }
-    
+
         public boolean initialized() {
             return _initialized;
         }
 
-        public void deserialize(byte[] data){
+        public void deserialize(byte[] data) {
             if (data != null) {
                 LOG.info("Loading meta!");
                 TDeserializer dser = new TDeserializer();
@@ -492,15 +490,15 @@ public class RocksDBSerializer {
                     populateReverseCollections();
                     _initialized = true;
                     LOG.info("Topology metadata deserialized: {}", _meta);
-                } catch (TException ex){
+                } catch (TException ex) {
                     //TODO: log it?
                 }
             }
         }
 
-        public byte[] serializeKey(Metric m){
+        public byte[] serializeKey(Metric m) {
             ByteBuffer bb = ByteBuffer.allocate(320);
-            bb.put((byte)1); // non metadata
+            bb.put((byte) 1); // non metadata
             bb.put(m.getAggLevel());
             bb.putInt(_topoId);
             bb.putLong(m.getTimeStamp());
@@ -518,9 +516,9 @@ public class RocksDBSerializer {
             return result;
         }
 
-        public byte[] serializeValue(Metric m){
-            int bufferSize = m.getCount() > 1 ? 320 : 128;
-            ByteBuffer bb = ByteBuffer.allocate(bufferSize);
+        public byte[] serializeValue(Metric m) {
+            int        bufferSize = m.getCount() > 1 ? 320 : 128;
+            ByteBuffer bb         = ByteBuffer.allocate(bufferSize);
             bb.putLong(m.getCount());
             bb.putDouble(m.getValue());
             bb.putDouble(m.getMin());
@@ -541,7 +539,7 @@ public class RocksDBSerializer {
         }
 
         public byte[] serialize() {
-            if (_hasChanged){
+            if (_hasChanged) {
                 TSerializer ser = new TSerializer();
                 try {
                     byte[] result = ser.serialize(_meta);
@@ -557,20 +555,20 @@ public class RocksDBSerializer {
             return null;
         }
 
-        public Integer getCompId(String compId){
+        public Integer getCompId(String compId) {
             return fetchOrCreate(_meta.get_comp_ids(), _revCompIds, compId);
         }
 
-        public Integer getMetricId(String metricId){
+        public Integer getMetricId(String metricId) {
             return fetchOrCreate(_meta.get_metric_ids(), _revMetricIds, metricId);
         }
 
-        public Integer getExecId(String executorId){
+        public Integer getExecId(String executorId) {
             return fetchOrCreate(_meta.get_executor_ids(), _revExecutorIds, executorId);
         }
 
         public Integer fetchOrCreate(Map<String, Integer> map, Map<Integer, String> rmap, String key) {
-            if (map.containsKey(key)){
+            if (map.containsKey(key)) {
                 return map.get(key);
             }
             Integer num = map.size();
@@ -580,15 +578,15 @@ public class RocksDBSerializer {
             return num;
         }
 
-        public String getComp(Integer compId){
+        public String getComp(Integer compId) {
             return _revCompIds.get(compId);
         }
 
-        public String getMetric(Integer metricId){
+        public String getMetric(Integer metricId) {
             return _revMetricIds.get(metricId);
         }
 
-        public String getExec(Integer executorId){
+        public String getExec(Integer executorId) {
             return _revExecutorIds.get(executorId);
         }
     }
