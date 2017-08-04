@@ -2591,6 +2591,85 @@ public class Nimbus implements Iface, Shutdownable, DaemonCommon {
     }
 
     @Override
+    public StormStats getStatsRanged(StatsSpecTimeRange spec) {
+
+        LOG.info("Getting ranged stats for {}", spec);
+        StormStats result = new StormStats();
+        String       topologyId = spec.get_topology_id();
+        List<String> metrics    = spec.get_metrics();
+        List<Long> startTimes = spec.get_start_times();
+        List<Long> endTimes = spec.get_end_times();
+        StatsStoreOperation op = spec.get_op();
+
+        if (startTimes == null || endTimes == null) {
+            return result;
+        }
+
+        List<TimeRange> timeRanges = new ArrayList<>(startTimes.size());
+        for (int i = 0; i<startTimes.size(); ++i){
+            TimeRange tr = new TimeRange(startTimes.get(i), endTimes.get(i), Window.ALL);
+            timeRanges.add(tr);
+        }
+
+        Aggregation baseAgg = new Aggregation();
+        if (topologyId != null) {
+            baseAgg.filterTopo(topologyId);
+        }
+
+
+        if (metrics != null) {
+            for (String metric : metrics) {
+                if (metric != null) {
+                    baseAgg.filterMetric(metric);
+                }
+            }
+        }
+
+
+        Long all_time = 0L;
+        Long time_now = Time.currentTimeMillis();
+
+        for (TimeRange tr : timeRanges){
+            StormRangedStats rangedStats = new StormRangedStats();
+            rangedStats.set_start_time(tr.startTime);
+            rangedStats.set_end_time(tr.endTime);
+
+            Aggregation agg = new Aggregation(baseAgg);
+            agg.filterTime(tr.startTime, tr.endTime, tr.window);
+
+            MetricResult metricResult;
+            try {
+                switch (op) {
+                    case SUM:
+                        metricResult = agg.sum(aggregatingMetricsStore);
+                        break;
+                    case MIN:
+                        metricResult = agg.min(aggregatingMetricsStore);
+                        break;
+                    case MAX:
+                        metricResult = agg.max(aggregatingMetricsStore);
+                        break;
+                    case AVG:
+                    default:
+                        metricResult = agg.mean(aggregatingMetricsStore);
+                        break;
+                }
+
+                for (String metric : metricResult.getMetricNames()) {
+                    rangedStats.put_to_values(metric, metricResult.getValueFor(metric, tr));
+                }
+
+                result.add_to_ranged_stats(rangedStats);
+
+            } catch (MetricException exp) {
+                LOG.error("Exception computing metrics", exp);
+            }
+        }
+
+        return result;
+    }
+
+    @Override
     public void submitTopology(String name, String uploadedJarLocation, String jsonConf, StormTopology topology)
             throws AlreadyAliveException, InvalidTopologyException, AuthorizationException, TException {
         submitTopologyCalls.mark();

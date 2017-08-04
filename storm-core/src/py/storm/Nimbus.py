@@ -24,12 +24,14 @@
 #  options string: py:utf8strings
 #
 
-from thrift.Thrift import TType, TMessageType, TException, TApplicationException
 import logging
-from ttypes import *
 from thrift.Thrift import TProcessor
+from thrift.Thrift import TType, TMessageType, TApplicationException
+from thrift.protocol import TBinaryProtocol
 from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol, TProtocol
+
+from ttypes import *
+
 try:
   from thrift.protocol import fastbinary
 except:
@@ -103,6 +105,13 @@ class Iface:
     pass
 
   def getStats(self, spec):
+    """
+    Parameters:
+     - spec
+    """
+    pass
+
+  def getStatsRanged(self, spec):
     """
     Parameters:
      - spec
@@ -702,6 +711,37 @@ class Client(Iface):
     if result.success is not None:
       return result.success
     raise TApplicationException(TApplicationException.MISSING_RESULT, "getStats failed: unknown result")
+
+  def getStatsRanged(self, spec):
+    """
+    Parameters:
+     - spec
+    """
+    self.send_getStatsRanged(spec)
+    return self.recv_getStatsRanged()
+
+  def send_getStatsRanged(self, spec):
+    self._oprot.writeMessageBegin('getStatsRanged', TMessageType.CALL, self._seqid)
+    args = getStatsRanged_args()
+    args.spec = spec
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_getStatsRanged(self):
+    iprot = self._iprot
+    (fname, mtype, rseqid) = iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(iprot)
+      iprot.readMessageEnd()
+      raise x
+    result = getStatsRanged_result()
+    result.read(iprot)
+    iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "getStatsRanged failed: unknown result")
 
   def setLogConfig(self, name, config):
     """
@@ -1944,6 +1984,7 @@ class Processor(Iface, TProcessor):
     self._processMap["rebalance"] = Processor.process_rebalance
     self._processMap["consumeWorkerStats"] = Processor.process_consumeWorkerStats
     self._processMap["getStats"] = Processor.process_getStats
+    self._processMap["getStatsRanged"] = Processor.process_getStatsRanged
     self._processMap["setLogConfig"] = Processor.process_setLogConfig
     self._processMap["getLogConfig"] = Processor.process_getLogConfig
     self._processMap["debug"] = Processor.process_debug
@@ -2214,6 +2255,25 @@ class Processor(Iface, TProcessor):
       logging.exception(ex)
       result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
     oprot.writeMessageBegin("getStats", msg_type, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_getStatsRanged(self, seqid, iprot, oprot):
+    args = getStatsRanged_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = getStatsRanged_result()
+    try:
+      result.success = self._handler.getStatsRanged(args.spec)
+      msg_type = TMessageType.REPLY
+    except (TTransport.TTransportException, KeyboardInterrupt, SystemExit):
+      raise
+    except Exception as ex:
+      msg_type = TMessageType.EXCEPTION
+      logging.exception(ex)
+      result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+    oprot.writeMessageBegin("getStatsRanged", msg_type, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -4474,6 +4534,137 @@ class getStats_result:
   def __ne__(self, other):
     return not (self == other)
 
+class getStatsRanged_args:
+  """
+  Attributes:
+   - spec
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRUCT, 'spec', (StatsSpecTimeRange, StatsSpecTimeRange.thrift_spec), None, ), # 1
+  )
+
+  def __init__(self, spec=None,):
+    self.spec = spec
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRUCT:
+          self.spec = StatsSpecTimeRange()
+          self.spec.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getStatsRanged_args')
+    if self.spec is not None:
+      oprot.writeFieldBegin('spec', TType.STRUCT, 1)
+      self.spec.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __hash__(self):
+    value = 17
+    value = (value * 31) ^ hash(self.spec)
+    return value
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getStatsRanged_result:
+  """
+  Attributes:
+   - success
+  """
+
+  thrift_spec = (
+    (0, TType.STRUCT, 'success', (StormStats, StormStats.thrift_spec), None, ), # 0
+  )
+
+  def __init__(self, success=None,):
+    self.success = success
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.STRUCT:
+          self.success = StormStats()
+          self.success.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getStatsRanged_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.STRUCT, 0)
+      self.success.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __hash__(self):
+    value = 17
+    value = (value * 31) ^ hash(self.success)
+    return value
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
 class setLogConfig_args:
   """
   Attributes:
@@ -5154,11 +5345,11 @@ class getComponentPendingProfileActions_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype867, _size864) = iprot.readListBegin()
-          for _i868 in xrange(_size864):
-            _elem869 = ProfileRequest()
-            _elem869.read(iprot)
-            self.success.append(_elem869)
+          (_etype904, _size901) = iprot.readListBegin()
+          for _i905 in xrange(_size901):
+            _elem906 = ProfileRequest()
+            _elem906.read(iprot)
+            self.success.append(_elem906)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -5175,8 +5366,8 @@ class getComponentPendingProfileActions_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter870 in self.success:
-        iter870.write(oprot)
+      for iter907 in self.success:
+        iter907.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()

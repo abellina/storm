@@ -25,17 +25,16 @@
 #  options string: py:utf8strings
 #
 
-import sys
 import pprint
-from urlparse import urlparse
-from thrift.transport import TTransport
-from thrift.transport import TSocket
-from thrift.transport import TSSLSocket
-from thrift.transport import THttpClient
-from thrift.protocol import TBinaryProtocol
-
+import sys
 from storm import Nimbus
 from storm.ttypes import *
+from thrift.protocol import TBinaryProtocol
+from thrift.transport import THttpClient
+from thrift.transport import TSSLSocket
+from thrift.transport import TSocket
+from thrift.transport import TTransport
+from urlparse import urlparse
 
 if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print('')
@@ -51,6 +50,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print('  void rebalance(string name, RebalanceOptions options)')
   print('  void consumeWorkerStats(SupervisorWorkerStats stats)')
   print('  StormStats getStats(StatsSpec spec)')
+  print('  StormStats getStatsRanged(StatsSpecTimeRange spec)')
   print('  void setLogConfig(string name, LogConfig config)')
   print('  LogConfig getLogConfig(string name)')
   print('  void debug(string name, string component, bool enable, double samplingPercentage)')
@@ -196,6 +196,12 @@ elif cmd == 'getStats':
     print('getStats requires 1 args')
     sys.exit(1)
   pp.pprint(client.getStats(eval(args[0]),))
+
+elif cmd == 'getStatsRanged':
+  if len(args) != 1:
+    print('getStatsRanged requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.getStatsRanged(eval(args[0]),))
 
 elif cmd == 'setLogConfig':
   if len(args) != 2:

@@ -666,6 +666,15 @@ struct StatsSpec {
   9: optional AggLevel min_agg_level;
 }
 
+struct StatsSpecTimeRange {
+  1: optional StatsStoreOperation op = StatsStoreOperation.SUM;
+  2: optional string topology_id;
+  3: optional list<string> metrics;
+  4: optional list<i64> start_times;
+  5: optional list<i64> end_times;
+  6: optional AggLevel min_agg_level;
+}
+
 struct StormWindowedStats {
   1: optional Window window;
   2: optional string topology_id;
@@ -679,10 +688,17 @@ struct StormSeriesStats {
   2: optional map<string, map<i64, double>> values; 
 }
 
+struct StormRangedStats {
+  1: i64 start_time;
+  2: i64 end_time;
+  4: optional map<string, double> values;
+}
+
 struct StormStats {
   1: optional list<StormWindowedStats> windowed_stats;
   // series name? should the below be a map?
   2: optional StormSeriesStats series_stats;
+  3: optional list<StormRangedStats> ranged_stats;
 }
 
 service Nimbus {
@@ -697,6 +713,7 @@ service Nimbus {
   void consumeWorkerStats(1: SupervisorWorkerStats stats);
 
   StormStats getStats(1: StatsSpec spec);
+  StormStats getStatsRanged(1: StatsSpecTimeRange spec);
 
   // dynamic log levels
   void setLogConfig(1: string name, 2: LogConfig config);

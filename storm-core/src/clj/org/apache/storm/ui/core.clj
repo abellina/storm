@@ -42,7 +42,7 @@
             LogConfig LogLevel LogLevelAction SupervisorPageInfo WorkerSummary
             StatsSpec Window StatsStoreOperation])
   (:import [org.apache.storm.security.auth AuthUtils ReqContext])
-  (:import [org.apache.storm.generated AuthorizationException ProfileRequest ProfileAction NodeInfo])
+  (:import [org.apache.storm.generated AuthorizationException ProfileRequest ProfileAction NodeInfo StatsSpecTimeRange])
   (:import [org.apache.storm.security.auth AuthUtils])
   (:import [org.apache.storm.utils Utils VersionInfo ConfigUtils])
   (:import [org.apache.storm Config])
@@ -65,27 +65,27 @@
 (def http-creds-handler (AuthUtils/GetUiHttpCredentialsPlugin *STORM-CONF*))
 (def STORM-VERSION (VersionInfo/getVersion))
 
-(def ui:num-cluster-configuration-http-requests (StormMetricsRegistry/registerMeter "ui:num-cluster-configuration-http-requests")) 
-(def ui:num-cluster-summary-http-requests (StormMetricsRegistry/registerMeter "ui:num-cluster-summary-http-requests")) 
-(def ui:num-nimbus-summary-http-requests (StormMetricsRegistry/registerMeter "ui:num-nimbus-summary-http-requests")) 
-(def ui:num-supervisor-http-requests (StormMetricsRegistry/registerMeter "ui:num-supervisor-http-requests")) 
-(def ui:num-supervisor-summary-http-requests (StormMetricsRegistry/registerMeter "ui:num-supervisor-summary-http-requests")) 
-(def ui:num-all-topologies-summary-http-requests (StormMetricsRegistry/registerMeter "ui:num-all-topologies-summary-http-requests")) 
+(def ui:num-cluster-configuration-http-requests (StormMetricsRegistry/registerMeter "ui:num-cluster-configuration-http-requests"))
+(def ui:num-cluster-summary-http-requests (StormMetricsRegistry/registerMeter "ui:num-cluster-summary-http-requests"))
+(def ui:num-nimbus-summary-http-requests (StormMetricsRegistry/registerMeter "ui:num-nimbus-summary-http-requests"))
+(def ui:num-supervisor-http-requests (StormMetricsRegistry/registerMeter "ui:num-supervisor-http-requests"))
+(def ui:num-supervisor-summary-http-requests (StormMetricsRegistry/registerMeter "ui:num-supervisor-summary-http-requests"))
+(def ui:num-all-topologies-summary-http-requests (StormMetricsRegistry/registerMeter "ui:num-all-topologies-summary-http-requests"))
 (def ui:num-topology-page-http-requests (StormMetricsRegistry/registerMeter "ui:num-topology-page-http-requests"))
 (def ui:num-topology-metric-http-requests (StormMetricsRegistry/registerMeter "ui:num-topology-metric-http-requests"))
 (def ui:num-build-visualization-http-requests (StormMetricsRegistry/registerMeter "ui:num-build-visualization-http-requests"))
-(def ui:num-mk-visualization-data-http-requests (StormMetricsRegistry/registerMeter "ui:num-mk-visualization-data-http-requests")) 
-(def ui:num-component-page-http-requests (StormMetricsRegistry/registerMeter "ui:num-component-page-http-requests")) 
-(def ui:num-log-config-http-requests (StormMetricsRegistry/registerMeter "ui:num-log-config-http-requests")) 
-(def ui:num-activate-topology-http-requests (StormMetricsRegistry/registerMeter "ui:num-activate-topology-http-requests")) 
-(def ui:num-deactivate-topology-http-requests (StormMetricsRegistry/registerMeter "ui:num-deactivate-topology-http-requests")) 
-(def ui:num-debug-topology-http-requests (StormMetricsRegistry/registerMeter "ui:num-debug-topology-http-requests")) 
-(def ui:num-component-op-response-http-requests (StormMetricsRegistry/registerMeter "ui:num-component-op-response-http-requests")) 
-(def ui:num-topology-op-response-http-requests (StormMetricsRegistry/registerMeter "ui:num-topology-op-response-http-requests")) 
-(def ui:num-topology-op-response-http-requests (StormMetricsRegistry/registerMeter "ui:num-topology-op-response-http-requests")) 
-(def ui:num-topology-op-response-http-requests (StormMetricsRegistry/registerMeter "ui:num-topology-op-response-http-requests")) 
-(def ui:num-main-page-http-requests (StormMetricsRegistry/registerMeter "ui:num-main-page-http-requests")) 
-(def ui:num-topology-lag-http-requests (StormMetricsRegistry/registerMeter "ui:num-topology-lag-http-requests")) 
+(def ui:num-mk-visualization-data-http-requests (StormMetricsRegistry/registerMeter "ui:num-mk-visualization-data-http-requests"))
+(def ui:num-component-page-http-requests (StormMetricsRegistry/registerMeter "ui:num-component-page-http-requests"))
+(def ui:num-log-config-http-requests (StormMetricsRegistry/registerMeter "ui:num-log-config-http-requests"))
+(def ui:num-activate-topology-http-requests (StormMetricsRegistry/registerMeter "ui:num-activate-topology-http-requests"))
+(def ui:num-deactivate-topology-http-requests (StormMetricsRegistry/registerMeter "ui:num-deactivate-topology-http-requests"))
+(def ui:num-debug-topology-http-requests (StormMetricsRegistry/registerMeter "ui:num-debug-topology-http-requests"))
+(def ui:num-component-op-response-http-requests (StormMetricsRegistry/registerMeter "ui:num-component-op-response-http-requests"))
+(def ui:num-topology-op-response-http-requests (StormMetricsRegistry/registerMeter "ui:num-topology-op-response-http-requests"))
+(def ui:num-topology-op-response-http-requests (StormMetricsRegistry/registerMeter "ui:num-topology-op-response-http-requests"))
+(def ui:num-topology-op-response-http-requests (StormMetricsRegistry/registerMeter "ui:num-topology-op-response-http-requests"))
+(def ui:num-main-page-http-requests (StormMetricsRegistry/registerMeter "ui:num-main-page-http-requests"))
+(def ui:num-topology-lag-http-requests (StormMetricsRegistry/registerMeter "ui:num-topology-lag-http-requests"))
 
 (defn assert-authorized-user
   ([op]
@@ -471,7 +471,7 @@
      "uptimeSeconds" uptime-secs
      "workerLogLink" (worker-log-link host port topology-id secure?)}))
 
-(defn supervisor-summary-to-json 
+(defn supervisor-summary-to-json
   [summary]
   (let [slotsTotal (.get_num_workers summary)
         slotsUsed (.get_num_used_workers summary)
@@ -500,7 +500,7 @@
 
 (defn supervisor-page-info
   ([supervisor-id host include-sys? secure?]
-     (thrift/with-configured-nimbus-connection 
+     (thrift/with-configured-nimbus-connection
         nimbus (supervisor-page-info (.getSupervisorPageInfo ^Nimbus$Client nimbus
                                                       supervisor-id
                                                       host
@@ -1070,7 +1070,7 @@
        "profilerActive" (if (*STORM-CONF* WORKER-PROFILER-ENABLED)
                           (get-active-profile-actions nimbus topology-id component)
                           [])))))
-    
+
 (defn- level-to-dict [level]
   (if level
     (let [timeout (.get_reset_log_level_timeout_secs level)
@@ -1142,14 +1142,14 @@
     "default" Window/ALL))
 
 (defn- str-op-to-thrift [str-op]
-  (case str-op 
+  (case str-op
     "SUM" StatsStoreOperation/SUM
     "AVG" StatsStoreOperation/AVG
     "MIN" StatsStoreOperation/MIN
     "MAX" StatsStoreOperation/MAX
     "default" StatsStoreOperation/SUM))
 
-(defn get-stats 
+(defn get-stats
   ([topology-id]
    (let [all-windows [Window/ALL]
          metrics ["emitted" "transferred" "acked" "failed"]
@@ -1161,14 +1161,14 @@
    (get-stats topology-id metrics windows op nil))
   ([topology-id metrics windows op component]
     (thrift/with-configured-nimbus-connection nimbus
-      (let [stats-spec (doto (StatsSpec.) 
+      (let [stats-spec (doto (StatsSpec.)
                          (.set_op op)
                          (.set_topology_id topology-id)
                          (.set_component component)
                          (.set_windows windows)
                          (.set_metrics metrics))
             stats (.getStats ^Nimbus$Client nimbus stats-spec)]
-        (into {} 
+        (into {}
           (dofor [stat (.get_windowed_stats stats)]
             {(.get_window stat) (into {} (.get_values stat))}))))))
 
@@ -1187,10 +1187,26 @@
                          (.set_start_time_sec (Long/parseLong (get spec :startTime)))
                          (.set_end_time_sec (Long/parseLong (get spec :endTime ))))
             stats (.getStats ^Nimbus$Client nimbus stats-spec)]
-        (into {} 
+        (into {}
           (let [stat (.get_series_stats stats)]
-            {"times" (.get_times stat) 
+            {"times" (.get_times stat)
              "values" (into {} (.get_values stat))}))))))
+
+(defn get-graph-data
+  ([spec]
+    (thrift/with-configured-nimbus-connection nimbus
+        (let [stats-spec (doto (StatsSpecTimeRange.)
+                           (.set_op (str-op-to-thrift (:op spec)))
+                           (.set_topology_id (:topology_id spec))
+                           (.set_metrics (:metrics spec))
+                           (.set_start_times (map #(Long/parseLong %) (:start_times spec)))
+                           (.set_end_times (map #(Long/parseLong %) (:end_times spec))))
+              stats (.getStatsRanged ^Nimbus$Client nimbus stats-spec)]
+          (into []
+                (dofor [stat (.get_ranged_stats stats)]
+                  {"start" (.get_start_time stat)
+                   "end" (.get_end_time stat)
+                   "values" (into {} (.get_values stat))}))))))
 
 (defroutes main-routes
   (GET "/api/v1/cluster/configuration" [& m]
@@ -1206,6 +1222,19 @@
     (assert-authorized-user "getClusterInfo")
     (json-response (get-stats id) (:callback m)))
 
+   (GET "/api/v1/stats/:id/:metric/:window/:op" [:as {:keys [cookies servlet-request scheme]} id metric window op & m]
+     (populate-context! servlet-request)
+     (assert-authorized-user "getClusterInfo")
+     (json-response (get-stats id
+                               [metric]
+                               [(str-window-to-thrift window)]
+                               (str-op-to-thrift op)) (:callback m)))
+
+  (POST "/api/v1/graphdata"  [:as {:keys [params servlet-request scheme]}  & m]
+    (populate-context! servlet-request)
+    (assert-authorized-user "getClusterInfo")
+    (json-response (get-graph-data params) (:callback m)))
+
   (GET "/api/v1/stats/:id/:metric/:window/:op/:component" [:as {:keys [cookies servlet-request scheme]} id metric window op component & m]
     (populate-context! servlet-request)
     (assert-authorized-user "getClusterInfo")
@@ -1218,9 +1247,9 @@
   (GET "/api/v1/stats/:id/:metric/:window/:op" [:as {:keys [cookies servlet-request scheme]} id metric window op & m]
     (populate-context! servlet-request)
     (assert-authorized-user "getClusterInfo")
-    (json-response (get-stats id 
-                              [metric] 
-                              [(str-window-to-thrift window)] 
+    (json-response (get-stats id
+                              [metric]
+                              [(str-window-to-thrift window)]
                               (str-op-to-thrift op)) (:callback m)))
 
   (GET "/api/v1/cluster/summary" [:as {:keys [cookies servlet-request]} & m]

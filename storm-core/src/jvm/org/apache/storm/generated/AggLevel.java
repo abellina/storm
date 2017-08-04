@@ -24,14 +24,11 @@
 package org.apache.storm.generated;
 
 
-import java.util.Map;
-import java.util.HashMap;
-import org.apache.thrift.TEnum;
-
 public enum AggLevel implements org.apache.thrift.TEnum {
   RAW(0),
-  TEN_MIN(1),
-  HOUR(2);
+  ONE_MIN(1),
+  TEN_MIN(2),
+  HOUR(3);
 
   private final int value;
 
@@ -55,8 +52,10 @@ public enum AggLevel implements org.apache.thrift.TEnum {
       case 0:
         return RAW;
       case 1:
-        return TEN_MIN;
+        return ONE_MIN;
       case 2:
+        return TEN_MIN;
+      case 3:
         return HOUR;
       default:
         return null;

@@ -34,6 +34,10 @@ public class Aggregation {
         settings = new HashMap<String, Object>();
     }
 
+    public Aggregation(Aggregation other) {
+        settings = new HashMap<String, Object>(other.getSettings());
+    }
+
     // Filter for specific fields
     // Todo: Filter for different instances of the same field, two hosts for example
 
